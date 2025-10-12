@@ -1,0 +1,53 @@
+@*
+    Page de préparation d'aventure
+    Permet au joueur de démarrer une nouvelle aventure dans le donjon
+*@
+@page "/adventure"
+
+<div class="adventure-container">
+    <h1>Nouvelle Aventure</h1>
+    
+    <div class="adventure-setup">
+        <div class="player-info">
+            <h3>Informations du Joueur</h3>
+            <p><strong>Nom :</strong> Aventurier (Non connecté)</p>
+            <p><strong>Score Actuel :</strong> 0 points</p>
+        </div>
+        
+        <div class="game-start">
+            <h3>Prêt à commencer ?</h3>
+            <p>Une nouvelle aventure vous attend dans les profondeurs du donjon...</p>
+            
+            <button class="btn btn-success btn-lg" @onclick="StartAdventure">
+                Commencer l'Aventure
+            </button>
+        </div>
+        
+        @if (adventureStarted)
+        {
+            <div class="adventure-started">
+                <div class="alert alert-info">
+                    <h4>Aventure Démarrée !</h4>
+                    <p>Vous entrez dans le donjon... Les ombres dansent sur les murs humides.</p>
+                    <a href="game" class="btn btn-primary">Entrer dans la première salle</a>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Indique si l'aventure a été démarrée par l'utilisateur
+    /// </summary>
+    private bool adventureStarted = false;
+    
+    /// <summary>
+    /// Démarre une nouvelle aventure et affiche le message de confirmation
+    /// Appelée lorsque l'utilisateur clique sur "Commencer l'Aventure"
+    /// </summary>
+    private void StartAdventure()
+    {
+        adventureStarted = true;
+    }
+}

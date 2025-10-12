@@ -1,0 +1,5 @@
+/* Adventure Page Styles */
+.adventure-container { max-width: 600px; margin: 0 auto; padding: 2rem; }
+.adventure-setup { background: #f8f9fa; padding: 2rem; border-radius: 10px; margin-top: 1rem; }
+.player-info, .game-start { margin-bottom: 2rem; padding: 1rem; background: white; border-radius: 5px; border-left: 4px solid #007bff; }
+.adventure-started { margin-top: 2rem; animation: fadeIn 0.5s ease-in; }

@@ -1,0 +1,15 @@
+/* About Page Styles */
+.about-container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+.project-info { margin: 2rem 0; }
+.info-section { background: #f8f9fa; margin-bottom: 2rem; padding: 2rem; border-radius: 10px; border-left: 4px solid #007bff; }
+.info-section h2 { color: #343a40; margin-bottom: 1rem; }
+.tech-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem; }
+.tech-item { background: white; padding: 1rem; border-radius: 5px; border-left: 3px solid #28a745; }
+.tech-item h4 { margin-bottom: 0.5rem; color: #495057; }
+.features-current, .features-planned { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0.5rem; margin-top: 1rem; }
+.feature-item { background: white; padding: 0.75rem; border-radius: 5px; display: flex; align-items: center; gap: 0.5rem; }
+.feature-item.completed { border-left: 3px solid #28a745; }
+.feature-item.planned { border-left: 3px solid #ffc107; }
+.status { font-weight: bold; min-width: 25px; }
+.back-actions { text-align: center; margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #dee2e6; }
+.back-actions .btn { margin: 0 0.5rem; padding: 0.75rem 1.5rem; }

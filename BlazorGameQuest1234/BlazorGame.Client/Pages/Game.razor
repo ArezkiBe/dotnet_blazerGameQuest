@@ -1,0 +1,123 @@
+@*
+    Page principale de jeu
+    Contient la logique d'interaction avec les salles de donjon
+    Gère les actions : Combattre, Fuir, Fouiller
+*@
+@page "/game"
+
+<div class="game-container">
+    <h1>Salle de Jeu - Donjon</h1>
+    
+    <div class="game-status">
+        <div class="player-stats">
+            <h3>État du Joueur</h3>
+            <p><strong>Nom :</strong> Aventurier</p>
+            <p><strong>Points :</strong> 0</p>
+            <p><strong>Salle :</strong> 1 / 5</p>
+        </div>
+    </div>
+
+    <div class="room-display">
+        <div class="room-description">
+            <h2>🏰 Salle 1 : L'Entrée du Donjon</h2>
+            <div class="room-story">
+                <p>Vous pénétrez dans une salle humide aux murs de pierre ancienne. 
+                   Des torches vacillantes projettent des ombres inquiétantes sur les murs couverts de mousse.</p>
+                   
+                <p>Soudain, un <strong>gobelin</strong> surgit des ombres, brandissant une épée rouillée !</p>
+                
+                <p class="encounter-text">💀 <em>Un gobelin vous barre la route !</em></p>
+            </div>
+        </div>
+
+        <div class="room-actions">
+            <h3>Que faites-vous ?</h3>
+            
+            <div class="action-buttons">
+                <button class="btn btn-danger action-btn" @onclick="@(() => TakeAction("combat"))">
+                    ⚔️ Combattre
+                    <small>Risqué mais plus de points</small>
+                </button>
+                
+                <button class="btn btn-warning action-btn" @onclick="@(() => TakeAction("flee"))">
+                    🏃 Fuir
+                    <small>Sûr mais moins de points</small>
+                </button>
+                
+                <button class="btn btn-info action-btn" @onclick="@(() => TakeAction("search"))">
+                    🔍 Fouiller
+                    <small>Chance de trésor ou piège</small>
+                </button>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(actionResult))
+        {
+            <div class="action-result">
+                <div class="alert alert-info">
+                    <h4>Résultat de l'action :</h4>
+                    <p>@actionResult</p>
+                    
+                    <div class="next-actions">
+                        <button class="btn btn-primary" @onclick="NextRoom">
+                            Passer à la salle suivante
+                        </button>
+                        <button class="btn btn-secondary" @onclick="ResetRoom">
+                            Refaire cette salle
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Résultat de la dernière action effectuée par le joueur
+    /// Affiché dans la section des résultats d'action
+    /// </summary>
+    private string actionResult = "";
+    
+    /// <summary>
+    /// Traite l'action choisie par le joueur dans la salle de donjon
+    /// </summary>
+    /// <param name="action">Type d'action : "combat", "flee", ou "search"</param>
+    private void TakeAction(string action)
+    {
+        // Traitement des différentes actions possibles
+        switch (action.ToLower())
+        {
+            case "combat":
+                // Action combattre : risqué mais plus de points
+                actionResult = "⚔️ Vous attaquez le gobelin avec courage ! Après un combat acharné, vous le vainquez. Vous gagnez 15 points !";
+                break;
+            case "flee":
+                // Action fuir : sûr mais moins de points
+                actionResult = "🏃 Vous fuyez prudemment vers la sortie de la salle. Vous évitez le danger mais ne gagnez que 5 points.";
+                break;
+            case "search":
+                // Action fouiller : chance de trésor ou piège
+                actionResult = "🔍 Vous fouillez la salle et trouvez un coffre caché ! À l'intérieur, une potion de soin et 10 pièces d'or. Vous gagnez 12 points !";
+                break;
+        }
+    }
+    
+    /// <summary>
+    /// Avance vers la salle suivante du donjon
+    /// Version 1 : Affiche un message, fonctionnalité complète à venir en Version 2
+    /// </summary>
+    private void NextRoom()
+    {
+        actionResult = "🚪 Vous avancez vers la salle suivante... (Fonctionnalité à venir)";
+    }
+    
+    /// <summary>
+    /// Remet à zéro les résultats d'action pour recommencer la salle
+    /// Permet au joueur de refaire ses choix dans la salle actuelle
+    /// </summary>
+    private void ResetRoom()
+    {
+        actionResult = "";
+    }
+}

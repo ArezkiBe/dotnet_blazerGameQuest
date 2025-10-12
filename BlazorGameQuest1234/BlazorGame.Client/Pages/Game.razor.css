@@ -1,0 +1,15 @@
+/* Game Page Styles */
+.game-container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+.game-status { background: #e9ecef; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; }
+.player-stats { display: flex; gap: 2rem; align-items: center; }
+.player-stats h3 { margin-right: 1rem; margin-bottom: 0; }
+.player-stats p { margin: 0; padding: 0.5rem 1rem; background: white; border-radius: 5px; border-left: 3px solid #007bff; }
+.room-display { background: #f8f9fa; padding: 2rem; border-radius: 10px; border: 2px solid #dee2e6; }
+.room-description { margin-bottom: 2rem; }
+.room-story { background: white; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #28a745; line-height: 1.6; }
+.encounter-text { font-size: 1.1em; font-weight: bold; color: #dc3545; text-align: center; margin: 1rem 0; padding: 0.5rem; background: #fff3cd; border-radius: 5px; }
+.action-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem; }
+.action-btn { padding: 1rem; text-align: center; min-height: 80px; display: flex; flex-direction: column; justify-content: center; font-size: 1.1em; }
+.action-btn small { display: block; margin-top: 0.5rem; opacity: 0.8; }
+.action-result { margin-top: 2rem; }
+.next-actions { margin-top: 1rem; display: flex; gap: 1rem; justify-content: center; }

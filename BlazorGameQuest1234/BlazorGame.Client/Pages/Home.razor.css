@@ -1,0 +1,6 @@
+/* Home Page Styles */
+.home-container { max-width: 800px; margin: 0 auto; padding: 2rem; }
+.game-description { background: #f8f9fa; padding: 2rem; border-radius: 10px; margin-top: 2rem; }
+.rules-section { margin: 1.5rem 0; }
+.action-buttons { text-align: center; margin-top: 2rem; }
+.btn-lg { padding: 1rem 2rem; font-size: 1.2rem; }
