@@ -6,14 +6,14 @@
 @page "/game"
 
 <div class="game-container">
-    <h1>Salle de Jeu - Donjon</h1>
+    <h1>🏰 Salle de Jeu - Donjon 🏰</h1>
     
     <div class="game-status">
         <div class="player-stats">
-            <h3>État du Joueur</h3>
-            <p><strong>Nom :</strong> Aventurier</p>
-            <p><strong>Points :</strong> 0</p>
-            <p><strong>Salle :</strong> 1 / 5</p>
+            <h3>⚔️ État du Joueur</h3>
+            <p><strong>👤 Nom :</strong> Aventurier</p>
+            <p><strong>💰 Points :</strong> 0</p>
+            <p><strong>🚪 Salle :</strong> 1 / 5</p>
         </div>
     </div>
 
@@ -31,7 +31,7 @@
         </div>
 
         <div class="room-actions">
-            <h3>Que faites-vous ?</h3>
+            <h3>⚡ Que faites-vous ?</h3>
             
             <div class="action-buttons">
                 <button class="btn btn-danger action-btn" @onclick="@(() => TakeAction("combat"))">
@@ -60,10 +60,10 @@
                     
                     <div class="next-actions">
                         <button class="btn btn-primary" @onclick="NextRoom">
-                            Passer à la salle suivante
+                            🚪 Passer à la salle suivante
                         </button>
                         <button class="btn btn-secondary" @onclick="ResetRoom">
-                            Refaire cette salle
+                            🔄 Refaire cette salle
                         </button>
                     </div>
                 </div>

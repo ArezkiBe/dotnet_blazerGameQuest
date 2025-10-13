@@ -67,11 +67,12 @@
 
 html, body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: var(--bg-primary);
+    background: linear-gradient(135deg, #f5f1e8 0%, #ede4d3 50%, #e8dcc6 100%);
     color: var(--text-primary);
     line-height: 1.6;
     margin: 0;
     padding: 0;
+    min-height: 100vh;
 }
 
 /* Headings */
@@ -248,6 +249,12 @@ a:hover, .btn-link:hover {
         content: "An error has occurred."
     }
 
+/* Écran de chargement avec fond parchemin cohérent */
+#app {
+    background: linear-gradient(135deg, #f5f1e8 0%, #ede4d3 50%, #e8dcc6 100%);
+    min-height: 100vh;
+}
+
 .loading-progress {
     position: relative;
     display: block;
@@ -258,14 +265,14 @@ a:hover, .btn-link:hover {
 
     .loading-progress circle {
         fill: none;
-        stroke: #e0e0e0;
+        stroke: #d4af37;
         stroke-width: 0.6rem;
         transform-origin: 50% 50%;
         transform: rotate(-90deg);
     }
 
         .loading-progress circle:last-child {
-            stroke: #1b6ec2;
+            stroke: #8b4513;
             stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
             transition: stroke-dasharray 0.05s ease-in-out;
         }
@@ -274,11 +281,15 @@ a:hover, .btn-link:hover {
     position: absolute;
     text-align: center;
     font-weight: bold;
+    font-family: 'Courier New', monospace;
+    color: #8b4513;
+    font-size: 1.1rem;
+    text-shadow: 1px 1px 0px #fff;
     inset: calc(20vh + 3.25rem) 0 auto 0.2rem;
 }
 
     .loading-progress-text:after {
-        content: var(--blazor-load-percentage-text, "Loading");
+        content: var(--blazor-load-percentage-text, "⚔️ Chargement ⚔️");
     }
 
 code {

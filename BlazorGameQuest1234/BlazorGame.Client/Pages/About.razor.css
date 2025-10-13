@@ -1,15 +1,260 @@
-/* About Page Styles */
-.about-container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
-.project-info { margin: 2rem 0; }
-.info-section { background: #f8f9fa; margin-bottom: 2rem; padding: 2rem; border-radius: 10px; border-left: 4px solid #007bff; }
-.info-section h2 { color: #343a40; margin-bottom: 1rem; }
-.tech-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem; }
-.tech-item { background: white; padding: 1rem; border-radius: 5px; border-left: 3px solid #28a745; }
-.tech-item h4 { margin-bottom: 0.5rem; color: #495057; }
-.features-current, .features-planned { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0.5rem; margin-top: 1rem; }
-.feature-item { background: white; padding: 0.75rem; border-radius: 5px; display: flex; align-items: center; gap: 0.5rem; }
-.feature-item.completed { border-left: 3px solid #28a745; }
-.feature-item.planned { border-left: 3px solid #ffc107; }
-.status { font-weight: bold; min-width: 25px; }
-.back-actions { text-align: center; margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #dee2e6; }
-.back-actions .btn { margin: 0 0.5rem; padding: 0.75rem 1.5rem; }
+/* About Page Styles - Médiéval/Pixelart */
+.about-container { 
+    max-width: 1100px; 
+    margin: 0 auto; 
+    padding: 2rem;
+    font-family: 'Courier New', monospace;
+    color: #ffd700;
+}
+
+/* Titre principal */
+.about-container h1 {
+    color: #ffd700 !important;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    font-size: 2.2rem;
+    text-shadow: 3px 3px 0px #000, 2px 2px 0px #8b4513;
+    margin-bottom: 2rem;
+    background: linear-gradient(90deg, #8b4513, #654321);
+    padding: 1.5rem;
+    border: 4px solid #d4af37;
+    border-radius: 0;
+    box-shadow: 
+        inset 2px 2px 0px rgba(212, 175, 55, 0.3),
+        inset -2px -2px 0px rgba(0, 0, 0, 0.8),
+        4px 4px 0px #000;
+}
+
+.project-info { 
+    margin: 2rem 0; 
+}
+
+/* Sections d'informations */
+.info-section { 
+    background: linear-gradient(135deg, #2d1b0e 0%, #1a1008 50%, #0f0804 100%);
+    margin-bottom: 2rem; 
+    padding: 2rem; 
+    border-radius: 0;
+    border: 3px solid #8b4513;
+    border-left: 6px solid #d4af37;
+    box-shadow: 
+        inset 2px 2px 0px rgba(212, 175, 55, 0.2),
+        inset -2px -2px 0px rgba(0, 0, 0, 0.8),
+        4px 4px 8px rgba(0, 0, 0, 0.6);
+}
+
+.info-section h2 { 
+    color: #d4af37 !important;
+    margin-bottom: 1.5rem;
+    font-family: 'Courier New', monospace;
+    text-shadow: 2px 2px 0px #000;
+    border-bottom: 3px dashed #654321;
+    padding-bottom: 0.7rem;
+    font-size: 1.6rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Textes et paragraphes */
+.info-section p {
+    color: #ffd700 !important;
+    font-family: 'Courier New', monospace;
+    line-height: 1.6;
+    text-shadow: 1px 1px 0px #000;
+    margin-bottom: 1rem;
+}
+
+.info-section strong {
+    color: #fff !important;
+    text-shadow: 2px 2px 0px #000;
+}
+
+.info-section ul {
+    color: #ffd700 !important;
+    font-family: 'Courier New', monospace;
+    text-shadow: 1px 1px 0px #000;
+}
+
+.info-section li {
+    margin-bottom: 0.5rem;
+    color: #ffd700 !important;
+}
+
+/* Grille technique */
+.tech-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+    gap: 1.5rem; 
+    margin-top: 1.5rem; 
+}
+
+.tech-item { 
+    background: linear-gradient(90deg, #3c2414, #2d1b0e);
+    padding: 1.5rem; 
+    border-radius: 0;
+    border: 2px solid #654321;
+    border-left: 5px solid #22c55e;
+    box-shadow: 
+        inset 1px 1px 0px rgba(34, 197, 94, 0.2),
+        2px 2px 0px #000;
+}
+
+.tech-item h4 { 
+    margin-bottom: 1rem; 
+    color: #22c55e !important;
+    font-family: 'Courier New', monospace;
+    text-shadow: 2px 2px 0px #000;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 2px solid #22c55e;
+    padding-bottom: 0.5rem;
+}
+
+.tech-item ul {
+    padding-left: 1.5rem;
+}
+
+.tech-item li {
+    color: #ffd700 !important;
+    font-family: 'Courier New', monospace;
+    text-shadow: 1px 1px 0px #000;
+    margin-bottom: 0.3rem;
+}
+
+/* Grilles de fonctionnalités */
+.features-current, .features-planned { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
+    gap: 1rem; 
+    margin-top: 1.5rem; 
+}
+
+.feature-item { 
+    background: linear-gradient(90deg, #3c2414, #2d1b0e);
+    padding: 1rem; 
+    border-radius: 0;
+    display: flex; 
+    align-items: center; 
+    gap: 1rem;
+    font-family: 'Courier New', monospace;
+    color: #ffd700 !important;
+    text-shadow: 1px 1px 0px #000;
+    border: 2px solid #654321;
+    box-shadow: 
+        inset 1px 1px 0px rgba(212, 175, 55, 0.1),
+        2px 2px 0px #000;
+}
+
+.feature-item.completed { 
+    border-left: 5px solid #22c55e;
+    box-shadow: 
+        inset 1px 1px 0px rgba(34, 197, 94, 0.2),
+        2px 2px 0px #000,
+        0 0 10px rgba(34, 197, 94, 0.3);
+}
+
+.feature-item.planned { 
+    border-left: 5px solid #f59e0b;
+    box-shadow: 
+        inset 1px 1px 0px rgba(245, 158, 11, 0.2),
+        2px 2px 0px #000,
+        0 0 10px rgba(245, 158, 11, 0.3);
+}
+
+.status { 
+    font-weight: bold; 
+    min-width: 30px;
+    font-size: 1.2rem;
+    filter: drop-shadow(1px 1px 0px #000);
+}
+
+/* Actions de retour */
+.back-actions { 
+    text-align: center; 
+    margin-top: 3rem; 
+    padding-top: 2rem; 
+    border-top: 4px dashed #8b4513;
+    background: linear-gradient(90deg, rgba(139, 69, 19, 0.1), rgba(45, 27, 14, 0.1));
+    padding: 2rem;
+    border: 3px solid #8b4513;
+    border-radius: 0;
+    box-shadow: 
+        inset 2px 2px 0px rgba(212, 175, 55, 0.1),
+        2px 2px 0px #000;
+}
+
+.back-actions .btn { 
+    margin: 0 1rem; 
+    padding: 1rem 2rem;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border-radius: 0;
+    transition: all 0.2s ease;
+    text-shadow: 1px 1px 0px #000;
+}
+
+.btn-primary {
+    background: linear-gradient(90deg, #d4af37, #b8941f) !important;
+    color: #000 !important;
+    border: 3px solid #ffd700 !important;
+    text-shadow: none !important;
+    box-shadow: 
+        inset 2px 2px 0px rgba(255, 255, 255, 0.3),
+        4px 4px 0px #000,
+        0 0 15px rgba(212, 175, 55, 0.4);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(90deg, #ffd700, #d4af37) !important;
+    transform: translateY(-2px);
+    box-shadow: 
+        inset 2px 2px 0px rgba(255, 255, 255, 0.4),
+        6px 6px 0px #000,
+        0 0 20px rgba(212, 175, 55, 0.6);
+}
+
+.btn-success {
+    background: linear-gradient(90deg, #16a34a, #15803d) !important;
+    color: #fff !important;
+    border: 3px solid #22c55e !important;
+    text-shadow: 1px 1px 0px #000 !important;
+    box-shadow: 
+        inset 2px 2px 0px rgba(34, 197, 94, 0.3),
+        4px 4px 0px #000,
+        0 0 15px rgba(22, 163, 74, 0.4);
+}
+
+.btn-success:hover {
+    background: linear-gradient(90deg, #22c55e, #16a34a) !important;
+    transform: translateY(-2px);
+    box-shadow: 
+        inset 2px 2px 0px rgba(34, 197, 94, 0.4),
+        6px 6px 0px #000,
+        0 0 20px rgba(22, 163, 74, 0.6);
+}
+
+/* Animation pour les features */
+.feature-item:hover {
+    transform: translateX(3px);
+    transition: transform 0.2s ease;
+}
+
+/* Effet de texture sur le contenu */
+.project-info::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        repeating-linear-gradient(90deg, 
+            rgba(139, 69, 19, 0.02) 0px, rgba(139, 69, 19, 0.02) 2px,
+            transparent 2px, transparent 4px
+        );
+    pointer-events: none;
+    z-index: -1;
+}

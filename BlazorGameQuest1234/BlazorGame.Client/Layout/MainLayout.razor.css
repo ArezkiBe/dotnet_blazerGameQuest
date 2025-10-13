@@ -7,10 +7,10 @@
 
 .main-content {
     flex: 1;
-    margin-left: 220px;
-    margin-top: 70px;
-    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
-    min-height: calc(100vh - 70px);
+    margin-left: 280px;
+    margin-top: 0;
+    background: transparent;
+    min-height: 100vh;
 }
 
 .content-container {
@@ -23,7 +23,7 @@
 @media (max-width: 768px) {
     .main-content {
         margin-left: 0;
-        margin-top: 70px;
+        margin-top: 0;
     }
 }
 
