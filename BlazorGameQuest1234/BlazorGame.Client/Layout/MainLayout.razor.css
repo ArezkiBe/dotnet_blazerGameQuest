@@ -1,0 +1,36 @@
+/* Game Layout Structure */
+.game-layout {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+}
+
+.main-content {
+    flex: 1;
+    margin-left: 280px;
+    margin-top: 0;
+    background: transparent;
+    min-height: 100vh;
+}
+
+.content-container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        margin-top: 0;
+    }
+}
+
+@media (min-width: 769px) {
+    .game-layout {
+        flex-direction: row;
+    }
+}
+
+

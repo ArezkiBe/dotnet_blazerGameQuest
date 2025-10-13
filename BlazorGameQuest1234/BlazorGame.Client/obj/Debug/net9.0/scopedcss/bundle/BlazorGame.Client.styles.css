@@ -1,0 +1,1198 @@
+/* /Layout/MainLayout.razor.rz.scp.css */
+/* Game Layout Structure */
+.game-layout[b-7u0urdf5km] {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+}
+
+.main-content[b-7u0urdf5km] {
+    flex: 1;
+    margin-left: 280px;
+    margin-top: 0;
+    background: transparent;
+    min-height: 100vh;
+}
+
+.content-container[b-7u0urdf5km] {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .main-content[b-7u0urdf5km] {
+        margin-left: 0;
+        margin-top: 0;
+    }
+}
+
+@media (min-width: 769px) {
+    .game-layout[b-7u0urdf5km] {
+        flex-direction: row;
+    }
+}
+
+
+/* /Layout/NavMenu.razor.rz.scp.css */
+/* ========= NAVIGATION MÉDIÉVALE - VERSION NETTOYÉE ========= */
+
+/* Barre du haut supprimée */
+.game-navbar[b-95ktyvifbg] {
+    display: none;
+}
+
+/* ========= SIDEBAR PRINCIPALE ========= */
+.game-sidebar[b-95ktyvifbg] {
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 280px; 
+    height: 100vh;
+    background: linear-gradient(180deg, #2d1b0e 0%, #1a1008 50%, #0f0804 100%);
+    border-right: 8px solid #8b4513;
+    border-image: 
+        repeating-linear-gradient(90deg, 
+            #8b4513 0px, #8b4513 4px,
+            #654321 4px, #654321 8px,
+            #8b4513 8px, #8b4513 12px
+        ) 8;
+    box-shadow: 
+        inset -4px 0 0 #654321,
+        4px 0 8px rgba(0, 0, 0, 0.6),
+        inset 0 0 20px rgba(0, 0, 0, 0.3);
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+}
+
+.game-sidebar.collapse[b-95ktyvifbg] { 
+    display: none; 
+}
+
+/* Scrollbar personnalisée */
+.game-sidebar[b-95ktyvifbg]::-webkit-scrollbar {
+    width: 16px;
+}
+.game-sidebar[b-95ktyvifbg]::-webkit-scrollbar-track {
+    background: #2d1b0e;
+    border: 2px solid #654321;
+}
+.game-sidebar[b-95ktyvifbg]::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #8b4513, #654321);
+    border: 1px solid #d4af37;
+}
+.game-sidebar[b-95ktyvifbg]::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #d4af37, #8b4513);
+}
+
+/* ========= NAVIGATION ========= */
+.game-nav[b-95ktyvifbg] { 
+    padding: 1rem 0; 
+    background: 
+        repeating-linear-gradient(90deg, 
+            rgba(139, 69, 19, 0.1) 0px, rgba(139, 69, 19, 0.1) 2px,
+            transparent 2px, transparent 4px
+        );
+}
+
+/* Sections de navigation */
+.nav-section[b-95ktyvifbg] { 
+    margin-bottom: 1.5rem; 
+    padding: 0 0.8rem 1rem 0.8rem; 
+    border-bottom: 2px dashed #654321;
+}
+.nav-section:last-child[b-95ktyvifbg] { 
+    border-bottom: none; 
+}
+
+/* Titres des sections */
+.nav-title[b-95ktyvifbg] {
+    color: #d4af37;
+    font-size: 1rem; 
+    font-weight: bold;
+    margin: 0.5rem 0.8rem 1rem 0.8rem; 
+    text-transform: uppercase; 
+    letter-spacing: 2px;
+    padding: 0.8rem 1rem;
+    background: linear-gradient(90deg, #8b4513, #654321);
+    border: 2px solid #d4af37;
+    text-shadow: 1px 1px 0px #000;
+    box-shadow: 
+        inset 2px 2px 0px rgba(212, 175, 55, 0.3),
+        2px 2px 0px #000;
+    font-family: 'Courier New', monospace;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* ========= LIENS DE NAVIGATION ========= */
+.nav-item[b-95ktyvifbg] {
+    margin-bottom: 0.3rem;
+}
+
+.nav-link[b-95ktyvifbg] {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.2rem;
+    margin: 0.3rem 0.8rem;
+    color: #ffd700;
+    text-decoration: none;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    background: linear-gradient(90deg, #3c2414, #2d1b0e);
+    border: 2px solid #654321;
+    border-left: 4px solid #8b4513;
+    text-shadow: 2px 2px 0px #000;
+    box-shadow: 
+        inset 1px 1px 0px rgba(212, 175, 55, 0.2),
+        1px 1px 0px #000;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+/* État hover */
+.nav-link:hover:not(.active)[b-95ktyvifbg] {
+    background: linear-gradient(90deg, #8b4513, #654321);
+    color: #fff;
+    border-color: #d4af37;
+    box-shadow: 
+        inset 2px 2px 0px rgba(255, 215, 0, 0.3),
+        2px 2px 0px #000,
+        0 0 10px rgba(212, 175, 55, 0.4);
+}
+
+.nav-link:hover:not(.active) *[b-95ktyvifbg] {
+    color: #fff;
+}
+
+/* État actif */
+.nav-link.active[b-95ktyvifbg] {
+    background: linear-gradient(90deg, #d4af37, #b8941f);
+    color: #fff;
+    border-color: #ffd700;
+    border-left: 6px solid #ffd700;
+    font-weight: bold;
+    box-shadow: 
+        inset 2px 2px 0px rgba(255, 255, 255, 0.3),
+        2px 2px 0px #000,
+        0 0 15px rgba(212, 175, 55, 0.6);
+    text-shadow: 2px 2px 4px #000;
+}
+
+.nav-link.active *[b-95ktyvifbg] {
+    color: #fff !important;
+    text-shadow: 2px 2px 4px #000 !important;
+}
+
+/* ========= ÉLÉMENTS DES LIENS ========= */
+.nav-icon[b-95ktyvifbg] {
+    font-size: 1.8rem;
+    margin-right: 1rem;
+    width: 32px;
+    text-align: center;
+    filter: drop-shadow(2px 2px 0px #000);
+    flex-shrink: 0;
+}
+
+.nav-text[b-95ktyvifbg] {
+    font-size: 0.9rem;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+    font-weight: bold;
+    white-space: nowrap;
+    flex: 1;
+    color: #ffd700;
+    text-shadow: 1px 1px 0px #000;
+}
+
+/* ========= STATISTIQUES DU JEU ========= */
+.game-stats[b-95ktyvifbg] { 
+    background: linear-gradient(135deg, #1a1008, #0f0804);
+    padding: 1.2rem; 
+    margin: 1rem 1rem 0.8rem 1rem;
+    border: 3px solid #8b4513;
+    border-top: 3px solid #d4af37;
+    box-shadow: 
+        inset 2px 2px 0px rgba(212, 175, 55, 0.2),
+        inset -2px -2px 0px rgba(0, 0, 0, 0.8),
+        2px 2px 0px #000;
+    font-family: 'Courier New', monospace;
+}
+
+.stat-item[b-95ktyvifbg] { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    padding: 0.5rem 0; 
+    border-bottom: 1px dashed #654321; 
+}
+.stat-item:last-child[b-95ktyvifbg] { 
+    border-bottom: none; 
+}
+
+.stat-label[b-95ktyvifbg] { 
+    color: #c9b037; 
+    font-size: 0.8rem; 
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 0px #000;
+}
+
+.stat-value[b-95ktyvifbg] { 
+    color: #ffd700; 
+    font-weight: bold; 
+    font-size: 0.9rem;
+    text-shadow: 1px 1px 0px #000;
+    background: linear-gradient(90deg, #8b4513, #654321);
+    padding: 0.2rem 0.5rem;
+    border: 1px solid #d4af37;
+}
+
+/* ========= ANIMATIONS ========= */
+@keyframes pulse-b-95ktyvifbg { 
+    0% { transform: scale(1); } 
+    50% { transform: scale(1.1); } 
+    100% { transform: scale(1); } 
+}
+
+/* ========= RESPONSIVE ========= */
+@media (max-width: 768px) {
+    .game-sidebar[b-95ktyvifbg] { 
+        position: fixed; 
+        top: 70px; 
+        left: 0; 
+        z-index: 1000; 
+        transform: translateX(-100%); 
+        transition: transform 0.3s ease; 
+    }
+    .game-sidebar:not(.collapse)[b-95ktyvifbg] { 
+        transform: translateX(0); 
+    }
+}
+
+@media (min-width: 769px) {
+    .collapse[b-95ktyvifbg] { 
+        display: block !important; 
+    }
+}
+/* /Pages/About.razor.rz.scp.css */
+/* About Page Styles - Médiéval/Pixelart */
+.about-container[b-ko3jfz2w38] { 
+    max-width: 1100px; 
+    margin: 0 auto; 
+    padding: 2rem;
+    font-family: 'Courier New', monospace;
+    color: #ffd700;
+}
+
+/* Titre principal */
+.about-container h1[b-ko3jfz2w38] {
+    color: #ffd700 !important;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    font-size: 2.2rem;
+    text-shadow: 3px 3px 0px #000, 2px 2px 0px #8b4513;
+    margin-bottom: 2rem;
+    background: linear-gradient(90deg, #8b4513, #654321);
+    padding: 1.5rem;
+    border: 4px solid #d4af37;
+    border-radius: 0;
+    box-shadow: 
+        inset 2px 2px 0px rgba(212, 175, 55, 0.3),
+        inset -2px -2px 0px rgba(0, 0, 0, 0.8),
+        4px 4px 0px #000;
+}
+
+.project-info[b-ko3jfz2w38] { 
+    margin: 2rem 0; 
+}
+
+/* Sections d'informations */
+.info-section[b-ko3jfz2w38] { 
+    background: linear-gradient(135deg, #2d1b0e 0%, #1a1008 50%, #0f0804 100%);
+    margin-bottom: 2rem; 
+    padding: 2rem; 
+    border-radius: 0;
+    border: 3px solid #8b4513;
+    border-left: 6px solid #d4af37;
+    box-shadow: 
+        inset 2px 2px 0px rgba(212, 175, 55, 0.2),
+        inset -2px -2px 0px rgba(0, 0, 0, 0.8),
+        4px 4px 8px rgba(0, 0, 0, 0.6);
+}
+
+.info-section h2[b-ko3jfz2w38] { 
+    color: #d4af37 !important;
+    margin-bottom: 1.5rem;
+    font-family: 'Courier New', monospace;
+    text-shadow: 2px 2px 0px #000;
+    border-bottom: 3px dashed #654321;
+    padding-bottom: 0.7rem;
+    font-size: 1.6rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Textes et paragraphes */
+.info-section p[b-ko3jfz2w38] {
+    color: #ffd700 !important;
+    font-family: 'Courier New', monospace;
+    line-height: 1.6;
+    text-shadow: 1px 1px 0px #000;
+    margin-bottom: 1rem;
+}
+
+.info-section strong[b-ko3jfz2w38] {
+    color: #fff !important;
+    text-shadow: 2px 2px 0px #000;
+}
+
+.info-section ul[b-ko3jfz2w38] {
+    color: #ffd700 !important;
+    font-family: 'Courier New', monospace;
+    text-shadow: 1px 1px 0px #000;
+}
+
+.info-section li[b-ko3jfz2w38] {
+    margin-bottom: 0.5rem;
+    color: #ffd700 !important;
+}
+
+/* Grille technique */
+.tech-grid[b-ko3jfz2w38] { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+    gap: 1.5rem; 
+    margin-top: 1.5rem; 
+}
+
+.tech-item[b-ko3jfz2w38] { 
+    background: linear-gradient(90deg, #3c2414, #2d1b0e);
+    padding: 1.5rem; 
+    border-radius: 0;
+    border: 2px solid #654321;
+    border-left: 5px solid #22c55e;
+    box-shadow: 
+        inset 1px 1px 0px rgba(34, 197, 94, 0.2),
+        2px 2px 0px #000;
+}
+
+.tech-item h4[b-ko3jfz2w38] { 
+    margin-bottom: 1rem; 
+    color: #22c55e !important;
+    font-family: 'Courier New', monospace;
+    text-shadow: 2px 2px 0px #000;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 2px solid #22c55e;
+    padding-bottom: 0.5rem;
+}
+
+.tech-item ul[b-ko3jfz2w38] {
+    padding-left: 1.5rem;
+}
+
+.tech-item li[b-ko3jfz2w38] {
+    color: #ffd700 !important;
+    font-family: 'Courier New', monospace;
+    text-shadow: 1px 1px 0px #000;
+    margin-bottom: 0.3rem;
+}
+
+/* Grilles de fonctionnalités */
+.features-current[b-ko3jfz2w38], .features-planned[b-ko3jfz2w38] { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
+    gap: 1rem; 
+    margin-top: 1.5rem; 
+}
+
+.feature-item[b-ko3jfz2w38] { 
+    background: linear-gradient(90deg, #3c2414, #2d1b0e);
+    padding: 1rem; 
+    border-radius: 0;
+    display: flex; 
+    align-items: center; 
+    gap: 1rem;
+    font-family: 'Courier New', monospace;
+    color: #ffd700 !important;
+    text-shadow: 1px 1px 0px #000;
+    border: 2px solid #654321;
+    box-shadow: 
+        inset 1px 1px 0px rgba(212, 175, 55, 0.1),
+        2px 2px 0px #000;
+}
+
+.feature-item.completed[b-ko3jfz2w38] { 
+    border-left: 5px solid #22c55e;
+    box-shadow: 
+        inset 1px 1px 0px rgba(34, 197, 94, 0.2),
+        2px 2px 0px #000,
+        0 0 10px rgba(34, 197, 94, 0.3);
+}
+
+.feature-item.planned[b-ko3jfz2w38] { 
+    border-left: 5px solid #f59e0b;
+    box-shadow: 
+        inset 1px 1px 0px rgba(245, 158, 11, 0.2),
+        2px 2px 0px #000,
+        0 0 10px rgba(245, 158, 11, 0.3);
+}
+
+.status[b-ko3jfz2w38] { 
+    font-weight: bold; 
+    min-width: 30px;
+    font-size: 1.2rem;
+    filter: drop-shadow(1px 1px 0px #000);
+}
+
+/* Actions de retour */
+.back-actions[b-ko3jfz2w38] { 
+    text-align: center; 
+    margin-top: 3rem; 
+    padding-top: 2rem; 
+    border-top: 4px dashed #8b4513;
+    background: linear-gradient(90deg, rgba(139, 69, 19, 0.1), rgba(45, 27, 14, 0.1));
+    padding: 2rem;
+    border: 3px solid #8b4513;
+    border-radius: 0;
+    box-shadow: 
+        inset 2px 2px 0px rgba(212, 175, 55, 0.1),
+        2px 2px 0px #000;
+}
+
+.back-actions .btn[b-ko3jfz2w38] { 
+    margin: 0 1rem; 
+    padding: 1rem 2rem;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border-radius: 0;
+    transition: all 0.2s ease;
+    text-shadow: 1px 1px 0px #000;
+}
+
+.btn-primary[b-ko3jfz2w38] {
+    background: linear-gradient(90deg, #d4af37, #b8941f) !important;
+    color: #000 !important;
+    border: 3px solid #ffd700 !important;
+    text-shadow: none !important;
+    box-shadow: 
+        inset 2px 2px 0px rgba(255, 255, 255, 0.3),
+        4px 4px 0px #000,
+        0 0 15px rgba(212, 175, 55, 0.4);
+}
+
+.btn-primary:hover[b-ko3jfz2w38] {
+    background: linear-gradient(90deg, #ffd700, #d4af37) !important;
+    transform: translateY(-2px);
+    box-shadow: 
+        inset 2px 2px 0px rgba(255, 255, 255, 0.4),
+        6px 6px 0px #000,
+        0 0 20px rgba(212, 175, 55, 0.6);
+}
+
+.btn-success[b-ko3jfz2w38] {
+    background: linear-gradient(90deg, #16a34a, #15803d) !important;
+    color: #fff !important;
+    border: 3px solid #22c55e !important;
+    text-shadow: 1px 1px 0px #000 !important;
+    box-shadow: 
+        inset 2px 2px 0px rgba(34, 197, 94, 0.3),
+        4px 4px 0px #000,
+        0 0 15px rgba(22, 163, 74, 0.4);
+}
+
+.btn-success:hover[b-ko3jfz2w38] {
+    background: linear-gradient(90deg, #22c55e, #16a34a) !important;
+    transform: translateY(-2px);
+    box-shadow: 
+        inset 2px 2px 0px rgba(34, 197, 94, 0.4),
+        6px 6px 0px #000,
+        0 0 20px rgba(22, 163, 74, 0.6);
+}
+
+/* Animation pour les features */
+.feature-item:hover[b-ko3jfz2w38] {
+    transform: translateX(3px);
+    transition: transform 0.2s ease;
+}
+
+/* Effet de texture sur le contenu */
+.project-info[b-ko3jfz2w38]::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        repeating-linear-gradient(90deg, 
+            rgba(139, 69, 19, 0.02) 0px, rgba(139, 69, 19, 0.02) 2px,
+            transparent 2px, transparent 4px
+        );
+    pointer-events: none;
+    z-index: -1;
+}
+/* /Pages/Adventure.razor.rz.scp.css */
+/* Adventure Page Styles - Médiéval/Pixelart */
+.adventure-container[b-g4g9ufp9it] { 
+    max-width: 700px; 
+    margin: 0 auto; 
+    padding: 2rem;
+    font-family: 'Courier New', monospace;
+    color: #ffd700;
+}
+
+/* Titre principal */
+.adventure-container h1[b-g4g9ufp9it] {
+    color: #ffd700 !important;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    font-size: 2.2rem;
+    text-shadow: 3px 3px 0px #000, 2px 2px 0px #8b4513;
+    margin-bottom: 2rem;
+    background: linear-gradient(90deg, #8b4513, #654321);
+    padding: 1.5rem;
+    border: 4px solid #d4af37;
+    border-radius: 0;
+    box-shadow: 
+        inset 2px 2px 0px rgba(212, 175, 55, 0.3),
+        inset -2px -2px 0px rgba(0, 0, 0, 0.8),
+        4px 4px 0px #000;
+}
+
+.adventure-setup[b-g4g9ufp9it] { 
+    background: linear-gradient(135deg, #2d1b0e 0%, #1a1008 50%, #0f0804 100%);
+    padding: 2rem; 
+    border-radius: 0;
+    margin-top: 1rem;
+    border: 3px solid #8b4513;
+    border-top: 3px solid #d4af37;
+    box-shadow: 
+        inset 2px 2px 0px rgba(212, 175, 55, 0.2),
+        inset -2px -2px 0px rgba(0, 0, 0, 0.8),
+        4px 4px 8px rgba(0, 0, 0, 0.6);
+}
+
+.player-info[b-g4g9ufp9it], .game-start[b-g4g9ufp9it] { 
+    margin-bottom: 2rem; 
+    padding: 1.5rem; 
+    background: linear-gradient(90deg, #3c2414, #2d1b0e);
+    border-radius: 0;
+    border: 2px solid #654321;
+    border-left: 6px solid #d4af37;
+    box-shadow: 
+        inset 1px 1px 0px rgba(212, 175, 55, 0.2),
+        2px 2px 0px #000;
+}
+
+/* Titres des sections */
+.player-info h3[b-g4g9ufp9it], .game-start h3[b-g4g9ufp9it] {
+    color: #d4af37 !important;
+    font-family: 'Courier New', monospace;
+    text-shadow: 2px 2px 0px #000;
+    border-bottom: 2px dashed #654321;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Texte et paragraphes */
+.player-info p[b-g4g9ufp9it], .game-start p[b-g4g9ufp9it] {
+    color: #ffd700 !important;
+    font-family: 'Courier New', monospace;
+    line-height: 1.6;
+    text-shadow: 1px 1px 0px #000;
+    margin-bottom: 0.8rem;
+}
+
+/* Texte en gras */
+.player-info strong[b-g4g9ufp9it], .game-start strong[b-g4g9ufp9it] {
+    color: #fff !important;
+    text-shadow: 2px 2px 0px #000;
+}
+
+/* Boutons */
+.player-info .btn[b-g4g9ufp9it], .game-start .btn[b-g4g9ufp9it] {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border-radius: 0;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    transition: all 0.2s ease;
+}
+
+.btn-success[b-g4g9ufp9it] {
+    background: linear-gradient(90deg, #16a34a, #15803d) !important;
+    color: #fff !important;
+    border: 3px solid #22c55e !important;
+    text-shadow: 1px 1px 0px #000 !important;
+    box-shadow: 
+        inset 2px 2px 0px rgba(34, 197, 94, 0.3),
+        4px 4px 0px #000,
+        0 0 15px rgba(22, 163, 74, 0.4);
+}
+
+.btn-success:hover[b-g4g9ufp9it] {
+    background: linear-gradient(90deg, #22c55e, #16a34a) !important;
+    transform: translateY(-2px);
+    box-shadow: 
+        inset 2px 2px 0px rgba(34, 197, 94, 0.4),
+        6px 6px 0px #000,
+        0 0 20px rgba(22, 163, 74, 0.6);
+}
+
+.btn-primary[b-g4g9ufp9it] {
+    background: linear-gradient(90deg, #d4af37, #b8941f) !important;
+    color: #000 !important;
+    border: 3px solid #ffd700 !important;
+    text-shadow: none !important;
+    box-shadow: 
+        inset 2px 2px 0px rgba(255, 255, 255, 0.3),
+        4px 4px 0px #000,
+        0 0 15px rgba(212, 175, 55, 0.4);
+}
+
+.btn-primary:hover[b-g4g9ufp9it] {
+    background: linear-gradient(90deg, #ffd700, #d4af37) !important;
+    transform: translateY(-2px);
+    box-shadow: 
+        inset 2px 2px 0px rgba(255, 255, 255, 0.4),
+        6px 6px 0px #000,
+        0 0 20px rgba(212, 175, 55, 0.6);
+}
+
+/* Section aventure commencée */
+.adventure-started[b-g4g9ufp9it] { 
+    margin-top: 2rem; 
+    animation: fadeIn-b-g4g9ufp9it 0.8s ease-in;
+}
+
+.adventure-started .alert[b-g4g9ufp9it] {
+    background: linear-gradient(135deg, #1a1008, #0f0804) !important;
+    border: 3px solid #d4af37 !important;
+    border-radius: 0 !important;
+    padding: 2rem !important;
+    box-shadow: 
+        inset 2px 2px 0px rgba(212, 175, 55, 0.2),
+        4px 4px 8px rgba(0, 0, 0, 0.6);
+}
+
+.adventure-started h4[b-g4g9ufp9it] {
+    color: #d4af37 !important;
+    font-family: 'Courier New', monospace;
+    text-shadow: 2px 2px 0px #000;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.adventure-started p[b-g4g9ufp9it] {
+    color: #ffd700 !important;
+    font-family: 'Courier New', monospace;
+    text-shadow: 1px 1px 0px #000;
+    font-style: italic;
+    font-size: 1.1rem;
+}
+
+@keyframes fadeIn-b-g4g9ufp9it {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+/* /Pages/Game.razor.rz.scp.css */
+/* Game Page Styles - Médiéval/Pixelart */
+.game-container[b-f1bun9cawi] { 
+    max-width: 1000px; 
+    margin: 0 auto; 
+    padding: 2rem;
+    font-family: 'Courier New', monospace;
+    color: #ffd700;
+}
+
+/* Titre principal */
+.game-container h1[b-f1bun9cawi] {
+    color: #ffd700 !important;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    font-size: 2.2rem;
+    text-shadow: 3px 3px 0px #000, 2px 2px 0px #8b4513;
+    margin-bottom: 2rem;
+    background: linear-gradient(90deg, #8b4513, #654321);
+    padding: 1.5rem;
+    border: 4px solid #d4af37;
+    border-radius: 0;
+    box-shadow: 
+        inset 2px 2px 0px rgba(212, 175, 55, 0.3),
+        inset -2px -2px 0px rgba(0, 0, 0, 0.8),
+        4px 4px 0px #000;
+}
+
+/* État du joueur */
+.game-status[b-f1bun9cawi] { 
+    background: linear-gradient(90deg, #3c2414, #2d1b0e);
+    padding: 1.5rem; 
+    border-radius: 0;
+    margin-bottom: 2rem;
+    border: 3px solid #8b4513;
+    border-left: 6px solid #d4af37;
+    box-shadow: 
+        inset 2px 2px 0px rgba(212, 175, 55, 0.2),
+        2px 2px 0px #000;
+}
+
+.player-stats[b-f1bun9cawi] { 
+    display: flex; 
+    gap: 2rem; 
+    align-items: center; 
+    flex-wrap: wrap;
+}
+
+.player-stats h3[b-f1bun9cawi] { 
+    color: #d4af37 !important;
+    font-family: 'Courier New', monospace;
+    text-shadow: 2px 2px 0px #000;
+    margin-right: 1rem; 
+    margin-bottom: 0;
+    font-size: 1.3rem;
+}
+
+.player-stats p[b-f1bun9cawi] { 
+    margin: 0; 
+    padding: 0.7rem 1.2rem; 
+    background: linear-gradient(90deg, #1a1008, #0f0804);
+    border-radius: 0;
+    border: 2px solid #654321;
+    border-left: 4px solid #ffd700;
+    color: #ffd700 !important;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    text-shadow: 1px 1px 0px #000;
+    box-shadow: inset 1px 1px 0px rgba(212, 175, 55, 0.2);
+}
+
+.player-stats strong[b-f1bun9cawi] {
+    color: #fff !important;
+}
+
+/* Affichage de la salle */
+.room-display[b-f1bun9cawi] { 
+    background: linear-gradient(135deg, #2d1b0e 0%, #1a1008 50%, #0f0804 100%);
+    padding: 2rem; 
+    border-radius: 0;
+    border: 3px solid #8b4513;
+    border-top: 3px solid #d4af37;
+    box-shadow: 
+        inset 2px 2px 0px rgba(212, 175, 55, 0.2),
+        inset -2px -2px 0px rgba(0, 0, 0, 0.8),
+        4px 4px 8px rgba(0, 0, 0, 0.6);
+}
+
+.room-description[b-f1bun9cawi] { 
+    margin-bottom: 2rem; 
+}
+
+.room-description h2[b-f1bun9cawi] {
+    color: #d4af37 !important;
+    font-family: 'Courier New', monospace;
+    text-shadow: 2px 2px 0px #000;
+    border-bottom: 3px dashed #654321;
+    padding-bottom: 0.7rem;
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.room-story[b-f1bun9cawi] { 
+    background: linear-gradient(135deg, #3c2414, #2d1b0e);
+    padding: 2rem; 
+    border-radius: 0;
+    border: 2px solid #654321;
+    border-left: 6px solid #22c55e;
+    line-height: 1.6;
+    box-shadow: 
+        inset 1px 1px 0px rgba(34, 197, 94, 0.2),
+        2px 2px 0px #000;
+}
+
+.room-story p[b-f1bun9cawi] {
+    color: #ffd700 !important;
+    font-family: 'Courier New', monospace;
+    text-shadow: 1px 1px 0px #000;
+    margin-bottom: 1rem;
+}
+
+.room-story strong[b-f1bun9cawi] {
+    color: #fff !important;
+    text-shadow: 2px 2px 0px #000;
+}
+
+.encounter-text[b-f1bun9cawi] { 
+    font-size: 1.2em; 
+    font-weight: bold; 
+    color: #dc2626 !important;
+    text-align: center; 
+    margin: 1.5rem 0; 
+    padding: 1rem; 
+    background: linear-gradient(90deg, #8b4513, #654321);
+    border: 3px solid #dc2626;
+    border-radius: 0;
+    font-family: 'Courier New', monospace;
+    text-shadow: 2px 2px 0px #000;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    box-shadow: 
+        inset 2px 2px 0px rgba(220, 38, 38, 0.2),
+        2px 2px 0px #000;
+}
+
+/* Actions */
+.room-actions h3[b-f1bun9cawi] {
+    color: #d4af37 !important;
+    font-family: 'Courier New', monospace;
+    text-shadow: 2px 2px 0px #000;
+    border-bottom: 2px dashed #654321;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 1.4rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.action-buttons[b-f1bun9cawi] { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+    gap: 1.5rem; 
+    margin-top: 1.5rem; 
+}
+
+.action-btn[b-f1bun9cawi] { 
+    padding: 1.5rem; 
+    text-align: center; 
+    min-height: 120px; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    font-size: 1.1em;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 0;
+    transition: all 0.2s ease;
+    text-shadow: 1px 1px 0px #000;
+}
+
+.action-btn small[b-f1bun9cawi] { 
+    display: block; 
+    margin-top: 0.8rem; 
+    opacity: 0.9;
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+/* Boutons spécifiques */
+.btn-danger.action-btn[b-f1bun9cawi] {
+    background: linear-gradient(90deg, #dc2626, #b91c1c) !important;
+    border: 3px solid #ef4444 !important;
+    box-shadow: 
+        inset 2px 2px 0px rgba(239, 68, 68, 0.3),
+        4px 4px 0px #000;
+}
+
+.btn-warning.action-btn[b-f1bun9cawi] {
+    background: linear-gradient(90deg, #f59e0b, #d97706) !important;
+    border: 3px solid #fbbf24 !important;
+    box-shadow: 
+        inset 2px 2px 0px rgba(251, 191, 36, 0.3),
+        4px 4px 0px #000;
+}
+
+.btn-info.action-btn[b-f1bun9cawi] {
+    background: linear-gradient(90deg, #2563eb, #1d4ed8) !important;
+    border: 3px solid #3b82f6 !important;
+    box-shadow: 
+        inset 2px 2px 0px rgba(59, 130, 246, 0.3),
+        4px 4px 0px #000;
+}
+
+.action-btn:hover[b-f1bun9cawi] {
+    transform: translateY(-3px);
+    box-shadow: 
+        inset 2px 2px 0px rgba(255, 255, 255, 0.2),
+        6px 6px 0px #000,
+        0 0 15px rgba(212, 175, 55, 0.4);
+}
+
+/* Résultat de l'action */
+.action-result[b-f1bun9cawi] { 
+    margin-top: 2rem; 
+}
+
+.action-result .alert[b-f1bun9cawi] {
+    background: linear-gradient(135deg, #1a1008, #0f0804) !important;
+    border: 3px solid #d4af37 !important;
+    border-radius: 0 !important;
+    padding: 2rem !important;
+    box-shadow: 
+        inset 2px 2px 0px rgba(212, 175, 55, 0.2),
+        4px 4px 8px rgba(0, 0, 0, 0.6);
+}
+
+.action-result h4[b-f1bun9cawi] {
+    color: #d4af37 !important;
+    font-family: 'Courier New', monospace;
+    text-shadow: 2px 2px 0px #000;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.action-result p[b-f1bun9cawi] {
+    color: #ffd700 !important;
+    font-family: 'Courier New', monospace;
+    text-shadow: 1px 1px 0px #000;
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.next-actions[b-f1bun9cawi] { 
+    margin-top: 1.5rem; 
+    display: flex; 
+    gap: 1.5rem; 
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.next-actions .btn[b-f1bun9cawi] {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 0;
+    padding: 1rem 2rem;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary[b-f1bun9cawi] {
+    background: linear-gradient(90deg, #64748b, #475569) !important;
+    color: #fff !important;
+    border: 3px solid #94a3b8 !important;
+    text-shadow: 1px 1px 0px #000 !important;
+    box-shadow: 
+        inset 2px 2px 0px rgba(148, 163, 184, 0.3),
+        4px 4px 0px #000;
+}
+
+.btn-secondary:hover[b-f1bun9cawi] {
+    background: linear-gradient(90deg, #94a3b8, #64748b) !important;
+    transform: translateY(-2px);
+    box-shadow: 
+        inset 2px 2px 0px rgba(148, 163, 184, 0.4),
+        6px 6px 0px #000;
+}
+/* /Pages/Home.razor.rz.scp.css */
+/* Home Page Styles - Médiéval/Pixelart */
+.home-container[b-ixau7aaveo] { 
+    max-width: 900px; 
+    margin: 0 auto; 
+    padding: 2rem;
+    font-family: 'Courier New', monospace;
+    color: #ffd700;
+}
+
+/* Titre principal */
+.home-container h1[b-ixau7aaveo] {
+    color: #ffd700 !important;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    font-size: 2.5rem;
+    text-shadow: 3px 3px 0px #000, 2px 2px 0px #8b4513;
+    margin-bottom: 2rem;
+    background: linear-gradient(90deg, #8b4513, #654321);
+    padding: 1.5rem;
+    border: 4px solid #d4af37;
+    border-radius: 0;
+    box-shadow: 
+        inset 2px 2px 0px rgba(212, 175, 55, 0.3),
+        inset -2px -2px 0px rgba(0, 0, 0, 0.8),
+        4px 4px 0px #000;
+}
+
+/* Section description du jeu */
+.game-description[b-ixau7aaveo] { 
+    background: linear-gradient(135deg, #2d1b0e 0%, #1a1008 50%, #0f0804 100%);
+    padding: 2rem; 
+    border-radius: 0;
+    margin-top: 2rem;
+    border: 3px solid #8b4513;
+    border-top: 3px solid #d4af37;
+    box-shadow: 
+        inset 2px 2px 0px rgba(212, 175, 55, 0.2),
+        inset -2px -2px 0px rgba(0, 0, 0, 0.8),
+        4px 4px 8px rgba(0, 0, 0, 0.6);
+}
+
+/* Titres secondaires */
+.game-description h2[b-ixau7aaveo],
+.game-description h3[b-ixau7aaveo] {
+    color: #d4af37 !important;
+    font-family: 'Courier New', monospace;
+    text-shadow: 2px 2px 0px #000;
+    border-bottom: 2px dashed #654321;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.game-description h2[b-ixau7aaveo] {
+    font-size: 1.8rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.game-description h3[b-ixau7aaveo] {
+    font-size: 1.3rem;
+    margin-top: 1.5rem;
+}
+
+/* Texte et paragraphes */
+.game-description p[b-ixau7aaveo],
+.game-description li[b-ixau7aaveo] {
+    color: #ffd700 !important;
+    font-family: 'Courier New', monospace;
+    line-height: 1.6;
+    text-shadow: 1px 1px 0px #000;
+    margin-bottom: 1rem;
+}
+
+/* Listes */
+.game-description ul[b-ixau7aaveo] {
+    padding-left: 2rem;
+}
+
+.game-description li[b-ixau7aaveo] {
+    margin-bottom: 0.5rem;
+    position: relative;
+}
+
+.game-description li[b-ixau7aaveo]::marker {
+    color: #d4af37;
+}
+
+/* Texte en gras */
+.game-description strong[b-ixau7aaveo] {
+    color: #fff !important;
+    text-shadow: 2px 2px 0px #000;
+}
+
+/* Section des règles */
+.rules-section[b-ixau7aaveo] { 
+    margin: 1.5rem 0;
+    background: linear-gradient(90deg, rgba(139, 69, 19, 0.1), rgba(45, 27, 14, 0.1));
+    padding: 1.5rem;
+    border: 2px dashed #654321;
+}
+
+/* Boutons d'action */
+.action-buttons[b-ixau7aaveo] { 
+    text-align: center; 
+    margin-top: 2rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(139, 69, 19, 0.1));
+    border: 3px solid #8b4513;
+    border-radius: 0;
+}
+
+.btn-lg[b-ixau7aaveo] { 
+    padding: 1.2rem 2.5rem; 
+    font-size: 1.3rem;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border-radius: 0;
+    background: linear-gradient(90deg, #d4af37, #b8941f) !important;
+    color: #000 !important;
+    border: 3px solid #ffd700 !important;
+    text-shadow: none !important;
+    box-shadow: 
+        inset 2px 2px 0px rgba(255, 255, 255, 0.3),
+        4px 4px 0px #000,
+        0 0 20px rgba(212, 175, 55, 0.4);
+    transition: all 0.2s ease;
+}
+
+.btn-lg:hover[b-ixau7aaveo] {
+    background: linear-gradient(90deg, #ffd700, #d4af37) !important;
+    transform: translateY(-2px);
+    box-shadow: 
+        inset 2px 2px 0px rgba(255, 255, 255, 0.4),
+        6px 6px 0px #000,
+        0 0 25px rgba(212, 175, 55, 0.6);
+}
+
+.btn-lg:active[b-ixau7aaveo] {
+    transform: translateY(0px);
+    box-shadow: 
+        inset 2px 2px 0px rgba(0, 0, 0, 0.2),
+        2px 2px 0px #000;
+}
+
+/* Effet de texture pixelisée sur le contenu */
+.home-container[b-ixau7aaveo]::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        repeating-linear-gradient(90deg, 
+            rgba(139, 69, 19, 0.02) 0px, rgba(139, 69, 19, 0.02) 2px,
+            transparent 2px, transparent 4px
+        ),
+        repeating-linear-gradient(180deg, 
+            rgba(139, 69, 19, 0.02) 0px, rgba(139, 69, 19, 0.02) 2px,
+            transparent 2px, transparent 4px
+        );
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* Animation subtile pour les icônes */
+.home-container h1[b-ixau7aaveo],
+.game-description h2[b-ixau7aaveo],
+.game-description h3[b-ixau7aaveo] {
+    animation: glow-b-ixau7aaveo 3s ease-in-out infinite alternate;
+}
+
+@keyframes glow-b-ixau7aaveo {
+    0% { text-shadow: 3px 3px 0px #000, 2px 2px 0px #8b4513, 0 0 10px rgba(212, 175, 55, 0.3); }
+    100% { text-shadow: 3px 3px 0px #000, 2px 2px 0px #8b4513, 0 0 20px rgba(212, 175, 55, 0.6); }
+}
+
+/* Amélioration de la lisibilité sur tous les éléments */
+.home-container *[b-ixau7aaveo] {
+    image-rendering: pixelated;
+}
+
+/* Style spécial pour le premier paragraphe */
+.game-description > p:first-of-type[b-ixau7aaveo] {
+    font-size: 1.1rem;
+    font-style: italic;
+    text-align: center;
+    color: #fff !important;
+    background: linear-gradient(90deg, rgba(212, 175, 55, 0.1), rgba(139, 69, 19, 0.1));
+    padding: 1rem;
+    border: 1px dashed #d4af37;
+    margin-bottom: 2rem;
+}

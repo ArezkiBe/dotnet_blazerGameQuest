@@ -1,0 +1,82 @@
+﻿<div class="game-navbar">
+    <div class="navbar-header">
+        <div class="brand-container">
+            <span class="brand-icon">⚔️</span>
+            <a class="navbar-brand" href="">BlazorGameQuest</a>
+        </div>
+        <button class="mobile-toggle" @onclick="ToggleNavMenu">
+            <span class="hamburger"></span>
+            <span class="hamburger"></span>
+            <span class="hamburger"></span>
+        </button>
+    </div>
+</div>
+
+<div class="game-sidebar @NavMenuCssClass">
+    <nav class="game-nav">
+        <div class="nav-section">
+            <h3 class="nav-title">🏠 Navigation</h3>
+            <div class="nav-item">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">Accueil</span>
+                </NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link" href="adventure">
+                    <span class="nav-icon">⚔️</span>
+                    <span class="nav-text">Nouvelle Aventure</span>
+                </NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link" href="game">
+                    <span class="nav-icon">🗡️</span>
+                    <span class="nav-text">Salle de Jeu</span>
+                </NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link" href="about">
+                    <span class="nav-icon">📜</span>
+                    <span class="nav-text">À Propos</span>
+                </NavLink>
+            </div>
+        </div>
+        
+        <div class="nav-section">
+            <h3 class="nav-title">🛡️ Jeu</h3>
+            <div class="game-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Joueur:</span>
+                    <span class="stat-value">Invité</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Score:</span>
+                    <span class="stat-value">0 pts</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+</div>
+
+@code {
+    /// <summary>
+    /// État de repli du menu de navigation (pour responsive mobile)
+    /// true = menu replié, false = menu déplié
+    /// </summary>
+    private bool collapseNavMenu = true;
+
+    /// <summary>
+    /// Propriété calculée qui retourne la classe CSS pour le repli du menu
+    /// </summary>
+    /// <returns>"collapse" si le menu doit être replié, null sinon</returns>
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    /// <summary>
+    /// Basculle l'état d'affichage du menu de navigation
+    /// Utilisé par le bouton hamburger sur mobile
+    /// </summary>
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}
