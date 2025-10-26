@@ -1,0 +1,14 @@
+﻿@*
+    Layout principal de l'application BlazorGameQuest
+    Structure de base avec navigation latérale et contenu principal
+*@
+@inherits LayoutComponentBase
+<div class="game-layout">
+    <NavMenu />
+    
+    <main class="main-content">
+        <article class="content-container">
+            @Body
+        </article>
+    </main>
+</div>

@@ -1,0 +1,242 @@
+/* ========= NAVIGATION MÉDIÉVALE - VERSION NETTOYÉE ========= */
+
+/* Barre du haut supprimée */
+.game-navbar {
+    display: none;
+}
+
+/* ========= SIDEBAR PRINCIPALE ========= */
+.game-sidebar {
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 280px; 
+    height: 100vh;
+    background: linear-gradient(180deg, #2d1b0e 0%, #1a1008 50%, #0f0804 100%);
+    border-right: 8px solid #8b4513;
+    border-image: 
+        repeating-linear-gradient(90deg, 
+            #8b4513 0px, #8b4513 4px,
+            #654321 4px, #654321 8px,
+            #8b4513 8px, #8b4513 12px
+        ) 8;
+    box-shadow: 
+        inset -4px 0 0 #654321,
+        4px 0 8px rgba(0, 0, 0, 0.6),
+        inset 0 0 20px rgba(0, 0, 0, 0.3);
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+}
+
+.game-sidebar.collapse { 
+    display: none; 
+}
+
+/* Scrollbar personnalisée */
+.game-sidebar::-webkit-scrollbar {
+    width: 16px;
+}
+.game-sidebar::-webkit-scrollbar-track {
+    background: #2d1b0e;
+    border: 2px solid #654321;
+}
+.game-sidebar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #8b4513, #654321);
+    border: 1px solid #d4af37;
+}
+.game-sidebar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #d4af37, #8b4513);
+}
+
+/* ========= NAVIGATION ========= */
+.game-nav { 
+    padding: 1rem 0; 
+    background: 
+        repeating-linear-gradient(90deg, 
+            rgba(139, 69, 19, 0.1) 0px, rgba(139, 69, 19, 0.1) 2px,
+            transparent 2px, transparent 4px
+        );
+}
+
+/* Sections de navigation */
+.nav-section { 
+    margin-bottom: 1.5rem; 
+    padding: 0 0.8rem 1rem 0.8rem; 
+    border-bottom: 2px dashed #654321;
+}
+.nav-section:last-child { 
+    border-bottom: none; 
+}
+
+/* Titres des sections */
+.nav-title {
+    color: #d4af37;
+    font-size: 1rem; 
+    font-weight: bold;
+    margin: 0.5rem 0.8rem 1rem 0.8rem; 
+    text-transform: uppercase; 
+    letter-spacing: 2px;
+    padding: 0.8rem 1rem;
+    background: linear-gradient(90deg, #8b4513, #654321);
+    border: 2px solid #d4af37;
+    text-shadow: 1px 1px 0px #000;
+    box-shadow: 
+        inset 2px 2px 0px rgba(212, 175, 55, 0.3),
+        2px 2px 0px #000;
+    font-family: 'Courier New', monospace;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* ========= LIENS DE NAVIGATION ========= */
+.nav-item {
+    margin-bottom: 0.3rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.2rem;
+    margin: 0.3rem 0.8rem;
+    color: #ffd700;
+    text-decoration: none;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    background: linear-gradient(90deg, #3c2414, #2d1b0e);
+    border: 2px solid #654321;
+    border-left: 4px solid #8b4513;
+    text-shadow: 2px 2px 0px #000;
+    box-shadow: 
+        inset 1px 1px 0px rgba(212, 175, 55, 0.2),
+        1px 1px 0px #000;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+/* État hover */
+.nav-link:hover:not(.active) {
+    background: linear-gradient(90deg, #8b4513, #654321);
+    color: #fff;
+    border-color: #d4af37;
+    box-shadow: 
+        inset 2px 2px 0px rgba(255, 215, 0, 0.3),
+        2px 2px 0px #000,
+        0 0 10px rgba(212, 175, 55, 0.4);
+}
+
+.nav-link:hover:not(.active) * {
+    color: #fff;
+}
+
+/* État actif */
+.nav-link.active {
+    background: linear-gradient(90deg, #d4af37, #b8941f);
+    color: #fff;
+    border-color: #ffd700;
+    border-left: 6px solid #ffd700;
+    font-weight: bold;
+    box-shadow: 
+        inset 2px 2px 0px rgba(255, 255, 255, 0.3),
+        2px 2px 0px #000,
+        0 0 15px rgba(212, 175, 55, 0.6);
+    text-shadow: 2px 2px 4px #000;
+}
+
+.nav-link.active * {
+    color: #fff !important;
+    text-shadow: 2px 2px 4px #000 !important;
+}
+
+/* ========= ÉLÉMENTS DES LIENS ========= */
+.nav-icon {
+    font-size: 1.8rem;
+    margin-right: 1rem;
+    width: 32px;
+    text-align: center;
+    filter: drop-shadow(2px 2px 0px #000);
+    flex-shrink: 0;
+}
+
+.nav-text {
+    font-size: 0.9rem;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+    font-weight: bold;
+    white-space: nowrap;
+    flex: 1;
+    color: #ffd700;
+    text-shadow: 1px 1px 0px #000;
+}
+
+/* ========= STATISTIQUES DU JEU ========= */
+.game-stats { 
+    background: linear-gradient(135deg, #1a1008, #0f0804);
+    padding: 1.2rem; 
+    margin: 1rem 1rem 0.8rem 1rem;
+    border: 3px solid #8b4513;
+    border-top: 3px solid #d4af37;
+    box-shadow: 
+        inset 2px 2px 0px rgba(212, 175, 55, 0.2),
+        inset -2px -2px 0px rgba(0, 0, 0, 0.8),
+        2px 2px 0px #000;
+    font-family: 'Courier New', monospace;
+}
+
+.stat-item { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    padding: 0.5rem 0; 
+    border-bottom: 1px dashed #654321; 
+}
+.stat-item:last-child { 
+    border-bottom: none; 
+}
+
+.stat-label { 
+    color: #c9b037; 
+    font-size: 0.8rem; 
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 0px #000;
+}
+
+.stat-value { 
+    color: #ffd700; 
+    font-weight: bold; 
+    font-size: 0.9rem;
+    text-shadow: 1px 1px 0px #000;
+    background: linear-gradient(90deg, #8b4513, #654321);
+    padding: 0.2rem 0.5rem;
+    border: 1px solid #d4af37;
+}
+
+/* ========= ANIMATIONS ========= */
+@keyframes pulse { 
+    0% { transform: scale(1); } 
+    50% { transform: scale(1.1); } 
+    100% { transform: scale(1); } 
+}
+
+/* ========= RESPONSIVE ========= */
+@media (max-width: 768px) {
+    .game-sidebar { 
+        position: fixed; 
+        top: 70px; 
+        left: 0; 
+        z-index: 1000; 
+        transform: translateX(-100%); 
+        transition: transform 0.3s ease; 
+    }
+    .game-sidebar:not(.collapse) { 
+        transform: translateX(0); 
+    }
+}
+
+@media (min-width: 769px) {
+    .collapse { 
+        display: block !important; 
+    }
+}

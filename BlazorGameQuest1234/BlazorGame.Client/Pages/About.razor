@@ -1,0 +1,129 @@
+@*
+    Page à propos du projet BlazorGameQuest
+    Contient les informations techniques, fonctionnalités et crédits
+*@
+@page "/about"
+
+<div class="about-container">
+    <h1>📜 À Propos de BlazorGameQuest 📜</h1>
+    
+    <div class="project-info">
+        <div class="info-section">
+            <h2>🏰 Description du Projet</h2>
+            <p>
+                <strong>BlazorGameQuest</strong> est un jeu d'aventure textuel développé avec 
+                <strong>Blazor WebAssembly</strong> et <strong>.NET 9</strong>. 
+                Les joueurs explorent des donjons générés aléatoirement et font des choix 
+                stratégiques pour maximiser leur score.
+            </p>
+        </div>
+
+        <div class="info-section">
+            <h2>🎯 Objectifs du Jeu</h2>
+            <ul>
+                <li>Explorer des donjons de 5 salles maximum</li>
+                <li>Faire des choix tactiques (Combat, Fuite, Fouille)</li>
+                <li>Accumuler des points selon vos actions</li>
+                <li>Gérer les risques vs récompenses</li>
+                <li>Gravir le classement des aventuriers</li>
+            </ul>
+        </div>
+
+        <div class="info-section">
+            <h2>🏗️ Architecture Technique</h2>
+            <div class="tech-grid">
+                <div class="tech-item">
+                    <h4>⚡ Frontend</h4>
+                    <ul>
+                        <li>Blazor WebAssembly</li>
+                        <li>Interface responsive</li>
+                        <li>Navigation intuitive</li>
+                    </ul>
+                </div>
+                <div class="tech-item">
+                    <h4>⚙️ Backend (À venir)</h4>
+                    <ul>
+                        <li>Web API .NET 9</li>
+                        <li>Microservices</li>
+                        <li>Authentication Keycloak</li>
+                    </ul>
+                </div>
+                <div class="tech-item">
+                    <h4>💾 Données (À venir)</h4>
+                    <ul>
+                        <li>EF Core InMemory</li>
+                        <li>Gestion des scores</li>
+                        <li>Historique des parties</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2>✅ Fonctionnalités Actuelles - Version 1</h2>
+            <div class="features-current">
+                <div class="feature-item completed">
+                    <span class="status">✅</span>
+                    <span>Structure du projet et navigation</span>
+                </div>
+                <div class="feature-item completed">
+                    <span class="status">✅</span>
+                    <span>Page d'accueil avec règles</span>
+                </div>
+                <div class="feature-item completed">
+                    <span class="status">✅</span>
+                    <span>Interface "Nouvelle Aventure"</span>
+                </div>
+                <div class="feature-item completed">
+                    <span class="status">✅</span>
+                    <span>Composant salle de jeu statique</span>
+                </div>
+                <div class="feature-item completed">
+                    <span class="status">✅</span>
+                    <span>Configuration des tests</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2>🚀 Fonctionnalités Prévues</h2>
+            <div class="features-planned">
+                <div class="feature-item planned">
+                    <span class="status">📋</span>
+                    <span>Génération aléatoire de donjons</span>
+                </div>
+                <div class="feature-item planned">
+                    <span class="status">📋</span>
+                    <span>Système de calcul des scores</span>
+                </div>
+                <div class="feature-item planned">
+                    <span class="status">📋</span>
+                    <span>Authentication et autorisation</span>
+                </div>
+                <div class="feature-item planned">
+                    <span class="status">📋</span>
+                    <span>Tableau de bord administrateur</span>
+                </div>
+                <div class="feature-item planned">
+                    <span class="status">📋</span>
+                    <span>Classements et historique</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2>🎓 Développement</h2>
+            <p>
+                <strong>Projet académique</strong> - EFREI LSI3 S7<br/>
+                <strong>Matière :</strong> .NET Development<br/>
+                <strong>Date :</strong> Octobre 2025<br/>
+                <strong>Version actuelle :</strong> 1.0 (Structure et Tests)
+            </p>
+        </div>
+    </div>
+    
+    <div class="back-actions">
+        <a href="/" class="btn btn-primary">🏠 Retour à l'Accueil</a>
+        <a href="/adventure" class="btn btn-success">🗡️ Commencer à Jouer</a>
+    </div>
+</div>

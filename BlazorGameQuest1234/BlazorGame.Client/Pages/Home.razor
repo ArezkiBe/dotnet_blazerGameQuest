@@ -1,0 +1,36 @@
+﻿@*
+    Page d'accueil de BlazorGameQuest
+    Présente les règles du jeu et permet de commencer une aventure
+*@
+@page "/"
+
+<PageTitle>BlazorGameQuest - Accueil</PageTitle>
+
+<div class="home-container">
+    <h1 class="display-4">⚔️ Bienvenue dans BlazorGameQuest ⚔️</h1>
+    
+    <div class="game-description">
+        <h2>🛡️ Règles du Jeu</h2>
+        <div class="rules-section">
+            <p>Incarnez un aventurier explorant des donjons générés aléatoirement.</p>
+            
+            <h3>⚡ Comment Jouer :</h3>
+            <ul>
+                <li>🏰 Chaque partie génère un donjon de maximum 5 salles</li>
+                <li>🎯 Dans chaque salle, vous avez des choix :</li>
+                <ul>
+                    <li><strong>⚔️ Combattre</strong> - Test de réussite, gain/perte de points</li>
+                    <li><strong>🏃 Fuir</strong> - Moins de points gagnés, mais sécurité</li>
+                    <li><strong>🔍 Fouiller</strong> - Chance de trouver un objet précieux ou de tomber dans un piège</li>
+                </ul>
+                <li>💰 Gagnez des points selon vos actions</li>
+                <li>💾 Sauvegardez votre progression</li>
+                <li>🏆 Consultez le classement général</li>
+            </ul>
+        </div>
+        
+        <div class="action-buttons">
+            <a href="adventure" class="btn btn-primary btn-lg">🗡️ Commencer une Nouvelle Aventure 🗡️</a>
+        </div>
+    </div>
+</div>
