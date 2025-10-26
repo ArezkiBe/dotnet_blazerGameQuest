@@ -1,22 +1,53 @@
-/// <summary>
-/// Point d'entrée principal de l'API AuthenticationServices pour BlazorGameQuest
-/// Gère l'authentification et les services utilisateur
-/// </summary>
+using Microsoft.EntityFrameworkCore;
+using DataAccess.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Ajout des services au conteneur DI
-// Documentation OpenAPI disponible sur : https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// Configuration de la base de données
+builder.Services.AddDbContext<GameDbContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    
+    // Utilise PostgreSQL si la chaîne de connexion est fournie, sinon InMemory pour les tests
+    if (!string.IsNullOrEmpty(connectionString))
+    {
+        options.UseNpgsql(connectionString);
+    }
+    else
+    {
+        options.UseInMemoryDatabase("BlazorGameQuestDB");
+    }
+});
 
-// Ajout des services Swagger pour la documentation API
+// Ajout des services au conteneur DI
+builder.Services.AddControllers();
+builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "BlazorGameQuest API",
+        Version = "v2.0",
+        Description = "API REST pour le jeu BlazorGameQuest - Version 2 avec Entity Framework Core et PostgreSQL",
+        Contact = new Microsoft.OpenApi.Models.OpenApiContact
+        {
+            Name = "BlazorGameQuest Team",
+            Email = "admin@blazergamequest.com"
+        }
+    });
+    
+    // Inclure la documentation XML si elle existe
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        c.IncludeXmlComments(xmlPath);
+    }
+});
 
 var app = builder.Build();
 
-/// <summary>
-/// Configuration du pipeline de requêtes HTTP
-/// </summary>
 if (app.Environment.IsDevelopment())
 {
     // Configuration OpenAPI pour l'environnement de développement
@@ -24,13 +55,16 @@ if (app.Environment.IsDevelopment())
     
     // Interface Swagger pour tester l'API
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "BlazorGameQuest API v2.0");
+        c.RoutePrefix = "swagger";
+        c.DocumentTitle = "BlazorGameQuest API Documentation";
+        c.DisplayRequestDuration();
+        c.EnableTryItOutByDefault();
+    });
 }
 
-/// <summary>
-/// Endpoint de vérification de santé de l'API
-/// Retourne le statut du service avec un timestamp
-/// </summary>
 app.MapGet("/health", () => new { 
     Status = "Healthy", 
     Service = "AuthenticationServices",
@@ -39,13 +73,45 @@ app.MapGet("/health", () => new {
 .WithName("HealthCheck")
 .WithTags("Health");
 
-// TODO Version 2 : Les endpoints d'authentification seront ajoutés ici
-// - Inscription utilisateur
-// - Connexion/Déconnexion
-// - Gestion des sessions
-// - Validation des tokens
+app.MapGet("/database-info", async (GameDbContext dbContext) =>
+{
+    try 
+    {
+        var userCount = await dbContext.Users.CountAsync();
+        var playerCount = await dbContext.Players.CountAsync();
+        var dungeonCount = await dbContext.Dungeons.CountAsync();
+        var roomCount = await dbContext.Rooms.CountAsync();
+        
+        return Results.Ok(new {
+            Status = "Database Connected",
+            DatabaseProvider = dbContext.Database.ProviderName,
+            Statistics = new {
+                Users = userCount,
+                Players = playerCount,
+                Dungeons = dungeonCount,
+                Rooms = roomCount
+            },
+            Timestamp = DateTime.UtcNow
+        });
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"Database connection failed: {ex.Message}");
+    }
+})
+.WithName("DatabaseInfo")
+.WithTags("Health")
+.WithSummary("Test de la connexion à la base de données")
+.WithDescription("Vérifie la connexion à la base de données et retourne les statistiques des entités");
 
-/// <summary>
-/// Démarrage de l'application web
-/// </summary>
+// Mapping des contrôleurs
+app.MapControllers();
+
+// Initialisation de la base de données avec des données de test
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<GameDbContext>();
+    await DbInitializer.InitializeAsync(dbContext);
+}
+
 app.Run();

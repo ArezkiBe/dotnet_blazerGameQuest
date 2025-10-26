@@ -140,3 +140,14 @@ C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGam
 C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\BlazorGameQuest.Tests\obj\Debug\net9.0\BlazorGameQuest.Tests.pdb
 C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\BlazorGameQuest.Tests\obj\Debug\net9.0\BlazorGameQuest.Tests.genruntimeconfig.cache
 C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\BlazorGameQuest.Tests\obj\Debug\net9.0\ref\BlazorGameQuest.Tests.dll
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\BlazorGameQuest.Tests\bin\Debug\net9.0\Microsoft.EntityFrameworkCore.dll
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\BlazorGameQuest.Tests\bin\Debug\net9.0\Microsoft.EntityFrameworkCore.Abstractions.dll
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\BlazorGameQuest.Tests\bin\Debug\net9.0\Microsoft.EntityFrameworkCore.InMemory.dll
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\BlazorGameQuest.Tests\bin\Debug\net9.0\Microsoft.EntityFrameworkCore.Relational.dll
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\BlazorGameQuest.Tests\bin\Debug\net9.0\Microsoft.Extensions.Caching.Abstractions.dll
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\BlazorGameQuest.Tests\bin\Debug\net9.0\Microsoft.Extensions.Caching.Memory.dll
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\BlazorGameQuest.Tests\bin\Debug\net9.0\Npgsql.dll
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\BlazorGameQuest.Tests\bin\Debug\net9.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\BlazorGameQuest.Tests\bin\Debug\net9.0\DataAccess.dll
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\BlazorGameQuest.Tests\bin\Debug\net9.0\DataAccess.pdb
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\BlazorGameQuest.Tests\bin\Debug\net9.0\AuthenticationServices.xml

@@ -1,0 +1,16 @@
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\DataAccess\bin\Debug\net9.0\DataAccess.deps.json
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\DataAccess\bin\Debug\net9.0\DataAccess.dll
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\DataAccess\bin\Debug\net9.0\DataAccess.pdb
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\DataAccess\bin\Debug\net9.0\SharedModels.dll
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\DataAccess\bin\Debug\net9.0\SharedModels.pdb
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\DataAccess\obj\Debug\net9.0\DataAccess.csproj.AssemblyReference.cache
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\DataAccess\obj\Debug\net9.0\DataAccess.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\DataAccess\obj\Debug\net9.0\DataAccess.AssemblyInfoInputs.cache
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\DataAccess\obj\Debug\net9.0\DataAccess.AssemblyInfo.cs
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\DataAccess\obj\Debug\net9.0\DataAccess.csproj.CoreCompileInputs.cache
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\DataAccess\obj\Debug\net9.0\DataAccess.sourcelink.json
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\DataAccess\obj\Debug\net9.0\DataAccess.csproj.Up2Date
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\DataAccess\obj\Debug\net9.0\DataAccess.dll
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\DataAccess\obj\Debug\net9.0\refint\DataAccess.dll
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\DataAccess\obj\Debug\net9.0\DataAccess.pdb
+C:\Users\ArezkiB\Desktop\Documents\EFREI_LSI3\S7\DOT_NET\Projet\dotnet_blazerGameQuest\BlazorGameQuest1234\DataAccess\obj\Debug\net9.0\ref\DataAccess.dll
