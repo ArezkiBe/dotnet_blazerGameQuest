@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>AuthenticationServices</name>
+    </assembly>
+    <members>
+        <member name="T:AuthenticationServices.Controllers.PlayersController">
+            <summary>
+            API Controller pour la gestion des joueurs
+            </summary>
+        </member>
+        <member name="M:AuthenticationServices.Controllers.PlayersController.GetPlayers">
+            <summary>
+            Récupère tous les joueurs triés par score
+            </summary>
+            <returns>Liste des joueurs triés par score décroissant</returns>
+            <response code="200">Retourne la liste des joueurs</response>
+        </member>
+        <member name="M:AuthenticationServices.Controllers.PlayersController.GetPlayer(System.Int32)">
+            <summary>
+            Récupère un joueur par son ID
+            </summary>
+        </member>
+        <member name="M:AuthenticationServices.Controllers.PlayersController.GetPlayerByUserId(System.Int32)">
+            <summary>
+            Récupère un joueur par l'ID de son utilisateur
+            </summary>
+        </member>
+        <member name="M:AuthenticationServices.Controllers.PlayersController.CreatePlayer(SharedModels.Models.Player)">
+            <summary>
+            Crée un nouveau joueur
+            </summary>
+        </member>
+        <member name="M:AuthenticationServices.Controllers.PlayersController.UpdatePlayer(System.Int32,SharedModels.Models.Player)">
+            <summary>
+            Met à jour un joueur existant
+            </summary>
+        </member>
+        <member name="M:AuthenticationServices.Controllers.PlayersController.DeletePlayer(System.Int32)">
+            <summary>
+            Supprime un joueur
+            </summary>
+        </member>
+        <member name="M:AuthenticationServices.Controllers.PlayersController.GetLeaderboard">
+            <summary>
+            Récupère le classement des 10 meilleurs joueurs
+            </summary>
+            <returns>Top 10 des joueurs par score</returns>
+            <response code="200">Retourne le classement des joueurs</response>
+        </member>
+        <member name="T:AuthenticationServices.Controllers.UsersController">
+            <summary>
+            API Controller pour la gestion des utilisateurs
+            </summary>
+        </member>
+        <member name="M:AuthenticationServices.Controllers.UsersController.GetUsers">
+            <summary>
+            Récupère tous les utilisateurs actifs
+            </summary>
+            <returns>Liste des utilisateurs actifs</returns>
+            <response code="200">Retourne la liste des utilisateurs</response>
+        </member>
+        <member name="M:AuthenticationServices.Controllers.UsersController.GetUser(System.Int32)">
+            <summary>
+            Récupère un utilisateur par son ID
+            </summary>
+            <param name="id">ID de l'utilisateur</param>
+            <returns>L'utilisateur correspondant</returns>
+            <response code="200">Utilisateur trouvé</response>
+            <response code="404">Utilisateur non trouvé</response>
+        </member>
+        <member name="M:AuthenticationServices.Controllers.UsersController.GetUserByUsername(System.String)">
+            <summary>
+            Récupère un utilisateur par son nom d'utilisateur
+            </summary>
+        </member>
+        <member name="M:AuthenticationServices.Controllers.UsersController.CreateUser(SharedModels.Models.User)">
+            <summary>
+            Crée un nouvel utilisateur
+            </summary>
+            <param name="user">Données de l'utilisateur à créer</param>
+            <returns>L'utilisateur créé</returns>
+            <response code="201">Utilisateur créé avec succès</response>
+            <response code="409">Nom d'utilisateur ou email déjà utilisé</response>
+        </member>
+        <member name="M:AuthenticationServices.Controllers.UsersController.UpdateUser(System.Int32,SharedModels.Models.User)">
+            <summary>
+            Met à jour un utilisateur existant
+            </summary>
+        </member>
+        <member name="M:AuthenticationServices.Controllers.UsersController.DeleteUser(System.Int32)">
+            <summary>
+            Supprime un utilisateur (suppression logique)
+            </summary>
+        </member>
+        <member name="M:AuthenticationServices.Controllers.UsersController.GetUserStatistics">
+            <summary>
+            Récupère les statistiques des utilisateurs
+            </summary>
+        </member>
+    </members>
+</doc>

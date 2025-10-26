@@ -1,0 +1,49 @@
+Summary
+  Generated on: 19/10/2025 - 11:21:25
+  Coverage date: 19/10/2025 - 11:20:41
+  Parser: Cobertura
+  Assemblies: 4
+  Classes: 21
+  Files: 22
+  Line coverage: 1.7%
+  Covered lines: 20
+  Uncovered lines: 1096
+  Coverable lines: 1116
+  Total lines: 2072
+  Branch coverage: 0% (0 of 62)
+  Covered branches: 0
+  Total branches: 62
+  Method coverage: 21.7% (20 of 92)
+  Full method coverage: 21.7% (20 of 92)
+  Covered methods: 20
+  Fully covered methods: 20
+  Total methods: 92
+
+AuthenticationServices                                       0%
+  AuthenticationServices.Controllers.DungeonsController      0%
+  AuthenticationServices.Controllers.PlayersController       0%
+  AuthenticationServices.Controllers.RoomsController         0%
+  AuthenticationServices.Controllers.UsersController         0%
+  Program                                                    0%
+
+BlazorGame.Client                                            0%
+  BlazorGame.Client.Layout.MainLayout                        0%
+  BlazorGame.Client.Layout.NavMenu                           0%
+  BlazorGame.Client.Pages.Adventure                          0%
+  BlazorGame.Client.Pages.Game                               0%
+  Program                                                    0%
+
+DataAccess                                                   0%
+  DataAccess.Data.DbInitializer                              0%
+  DataAccess.Data.GameDbContext                              0%
+  DataAccess.Data.GameDbContextFactory                       0%
+  DataAccess.Migrations.GameDbContextModelSnapshot           0%
+  DataAccess.Migrations.InitialCreate                        0%
+
+SharedModels                                              55.5%
+  SharedModels.ActionResult                                  0%
+  SharedModels.Models.Administrator                          0%
+  SharedModels.Models.Dungeon                             83.3%
+  SharedModels.Models.Player                              83.3%
+  SharedModels.Models.Room                                71.4%
+  SharedModels.Models.User                                71.4%

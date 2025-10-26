@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <NuGetAudit>false</NuGetAudit>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SharedModels\SharedModels.csproj" />
+    <ProjectReference Include="..\DataAccess\DataAccess.csproj" />
     <ProjectReference Include="..\BlazorGame.Client\BlazorGame.Client.csproj" />
     <ProjectReference Include="..\AuthenticationServices\AuthenticationServices.csproj" />
   </ItemGroup>
