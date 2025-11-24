@@ -11,21 +11,25 @@
         <div class="info-section">
             <h2>🏰 Description du Projet</h2>
             <p>
-                <strong>BlazorGameQuest</strong> est un jeu d'aventure textuel développé avec 
+                <strong>BlazorGameQuest</strong> est un jeu d'aventure RPG complet développé avec 
                 <strong>Blazor WebAssembly</strong> et <strong>.NET 9</strong>. 
-                Les joueurs explorent des donjons générés aléatoirement et font des choix 
-                stratégiques pour maximiser leur score.
+                Les joueurs créent des personnages, explorent des donjons générés dynamiquement, 
+                combattent des monstres, montent en niveau et accumulent des scores élevés 
+                dans cette expérience RPG immersive.
             </p>
         </div>
 
         <div class="info-section">
             <h2>🎯 Objectifs du Jeu</h2>
             <ul>
-                <li>Explorer des donjons de 5 salles maximum</li>
-                <li>Faire des choix tactiques (Combat, Fuite, Fouille)</li>
-                <li>Accumuler des points selon vos actions</li>
-                <li>Gérer les risques vs récompenses</li>
-                <li>Gravir le classement des aventuriers</li>
+                <li>⚔️ Créer et gérer votre personnage avec HP, XP et niveau</li>
+                <li>🏰 Explorer des donjons de 5 salles générés dynamiquement</li>
+                <li>🗡️ Faire des choix tactiques (Combat, Fuite, Investigation, Fouille)</li>
+                <li>🏆 Accumuler des points selon vos actions et la difficulté</li>
+                <li>❤️ Gérer votre santé et éviter la mort</li>
+                <li>✨ Monter de niveau pour améliorer vos statistiques</li>
+                <li>💎 Découvrir des trésors et objets rares</li>
+                <li>📊 Maîtriser le système de risques vs récompenses</li>
             </ul>
         </div>
 
@@ -35,70 +39,89 @@
                 <div class="tech-item">
                     <h4>⚡ Frontend</h4>
                     <ul>
-                        <li>Blazor WebAssembly</li>
-                        <li>Interface responsive</li>
-                        <li>Navigation intuitive</li>
+                        <li>Blazor WebAssembly .NET 9</li>
+                        <li>Interface thème médiéval</li>
+                        <li>Système UI cohérent</li>
+                        <li>Navigation responsive</li>
                     </ul>
                 </div>
                 <div class="tech-item">
-                    <h4>⚙️ Backend (À venir)</h4>
+                    <h4>⚙️ Backend</h4>
                     <ul>
-                        <li>Web API .NET 9</li>
-                        <li>Microservices</li>
-                        <li>Authentication Keycloak</li>
+                        <li>API .NET 9 avec EF Core</li>
+                        <li>Services de génération de donjons</li>
+                        <li>Gestion des sessions de jeu</li>
+                        <li>Microservices d'authentification</li>
                     </ul>
                 </div>
                 <div class="tech-item">
-                    <h4>💾 Données (À venir)</h4>
+                    <h4>💾 Données</h4>
                     <ul>
-                        <li>EF Core InMemory</li>
-                        <li>Gestion des scores</li>
-                        <li>Historique des parties</li>
+                        <li>Entity Framework Core</li>
+                        <li>Base de données en mémoire</li>
+                        <li>Modèles partagés</li>
+                        <li>Migration automatique</li>
                     </ul>
                 </div>
             </div>
         </div>
 
         <div class="info-section">
-            <h2>✅ Fonctionnalités Actuelles - Version 1</h2>
+            <h2>✅ Fonctionnalités Actuelles - Version 3.0</h2>
             <div class="features-current">
                 <div class="feature-item completed">
                     <span class="status">✅</span>
-                    <span>Structure du projet et navigation</span>
+                    <span>Interface complète avec thème médiéval</span>
                 </div>
                 <div class="feature-item completed">
                     <span class="status">✅</span>
-                    <span>Page d'accueil avec règles</span>
+                    <span>Génération dynamique de donjons (5 types de salles)</span>
                 </div>
                 <div class="feature-item completed">
                     <span class="status">✅</span>
-                    <span>Interface "Nouvelle Aventure"</span>
+                    <span>Système complet de santé (HP) et de progression (XP)</span>
                 </div>
                 <div class="feature-item completed">
                     <span class="status">✅</span>
-                    <span>Composant salle de jeu statique</span>
+                    <span>5 types d'actions : Combat, Fuite, Investigation, Fouille, Ignorer</span>
                 </div>
                 <div class="feature-item completed">
                     <span class="status">✅</span>
-                    <span>Configuration des tests</span>
+                    <span>Système de niveaux avec amélioration des statistiques</span>
+                </div>
+                <div class="feature-item completed">
+                    <span class="status">✅</span>
+                    <span>3 niveaux de difficulté avec multiplicateurs de score</span>
+                </div>
+                <div class="feature-item completed">
+                    <span class="status">✅</span>
+                    <span>Découverte d'objets et trésors</span>
+                </div>
+                <div class="feature-item completed">
+                    <span class="status">✅</span>
+                    <span>API Backend avec Entity Framework Core</span>
+                </div>
+                <div class="feature-item completed">
+                    <span class="status">✅</span>
+                    <span>Gestion des joueurs et sessions de jeu</span>
+                </div>
+                <div class="feature-item completed">
+                    <span class="status">✅</span>
+                    <span>Tests unitaires et d'intégration complets</span>
                 </div>
             </div>
         </div>
 
         <div class="info-section">
-            <h2>🚀 Fonctionnalités Prévues</h2>
+            <h2>🚀 Fonctionnalités Prévues - Versions 4.0 & 5.0</h2>
             <div class="features-planned">
                 <div class="feature-item planned">
                     <span class="status">📋</span>
-                    <span>Génération aléatoire de donjons</span>
+                    <span>Authentification et autorisation utilisateurs</span>
                 </div>
                 <div class="feature-item planned">
                     <span class="status">📋</span>
-                    <span>Système de calcul des scores</span>
-                </div>
-                <div class="feature-item planned">
-                    <span class="status">📋</span>
-                    <span>Authentication et autorisation</span>
+                    <span>Base de données persistante (remplacement InMemory)</span>
                 </div>
                 <div class="feature-item planned">
                     <span class="status">📋</span>
@@ -106,7 +129,15 @@
                 </div>
                 <div class="feature-item planned">
                     <span class="status">📋</span>
-                    <span>Classements et historique</span>
+                    <span>Classements globaux et historique complet</span>
+                </div>
+                <div class="feature-item planned">
+                    <span class="status">📋</span>
+                    <span>Système d'équipement et inventaire</span>
+                </div>
+                <div class="feature-item planned">
+                    <span class="status">📋</span>
+                    <span>Multijoueur et guildes</span>
                 </div>
             </div>
         </div>
@@ -116,14 +147,15 @@
             <p>
                 <strong>Projet académique</strong> - EFREI LSI3 S7<br/>
                 <strong>Matière :</strong> .NET Development<br/>
-                <strong>Date :</strong> Octobre 2025<br/>
-                <strong>Version actuelle :</strong> 1.0 (Structure et Tests)
+                <strong>Période :</strong> Octobre - Novembre 2025<br/>
+                <strong>Version actuelle :</strong> 3.0 (Jeu Complet avec API)<br/>
+                <strong>Statut :</strong> Fonctionnel et jouable
             </p>
         </div>
     </div>
     
     <div class="back-actions">
-        <a href="/" class="btn btn-primary">🏠 Retour à l'Accueil</a>
-        <a href="/adventure" class="btn btn-success">🗡️ Commencer à Jouer</a>
+        <a href="/" class="medieval-btn-secondary">🏠 Retour à l'Accueil</a>
+        <a href="/adventure" class="medieval-btn-primary">🗡️ Commencer à Jouer</a>
     </div>
 </div>

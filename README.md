@@ -1,78 +1,91 @@
-# BlazorGameQuest Version 2
+# BlazorGameQuest
 
-Membres du groupe:
-Arezki BEGGAR
-Ilyas HADJADJ
+**Membres du groupe :** Arezki BEGGAR, Ilyas HADJADJ
 
-## Architecture du Projet
+## Description
 
-### Structure de la Solution
+Jeu d'aventure Blazor WebAssembly avec API .NET 9. Le joueur explore des donjons générés aléatoirement avec système de score et progression RPG.
+
+## Architecture
+
 ```
 BlazorGameQuest1234/
-├── BlazorGame.Client/          # Application Blazor WebAssembly (Frontend)
-├── AuthenticationServices/     # API Web avec CRUD complet
-├── SharedModels/              # Modèles de domaine (User, Player, Dungeon, Room)
-├── DataAccess/                # Couche d'accès aux données (EF Core)
-└── BlazorGameQuest.Tests/     # Tests unitaires (24 tests)
+├── BlazorGame.Client/          # Frontend Blazor WebAssembly
+├── GameAPI/                   # API REST avec CRUD
+├── SharedModels/              # Modèles de données partagés
+├── DataAccess/                # Entity Framework Core
+└── BlazorGameQuest.Tests/     # Tests unitaires (35 tests)
 ```
 
-### Technologies Utilisées
-- **.NET 9** - Framework principal
-- **Entity Framework Core 9** - ORM avec PostgreSQL/InMemory
-- **ASP.NET Core Web API** - Services REST complets
-- **Swagger/OpenAPI** - Documentation API interactive
-- **xUnit** - Tests unitaires avec couverture de code
+## Technologies
 
-## Nouveautés Version 2
+- .NET 9, Entity Framework Core, ASP.NET Web API
+- Blazor WebAssembly, Swagger/OpenAPI
+- xUnit, PostgreSQL/InMemory
 
-### Base de Données et Modèles
-- **Utilisateurs** - Gestion complète des comptes (Player/Administrator)
-- **Joueurs** - Profils avec scores et progression
-- **Donjons** - Donjons générés avec description et métadonnées
-- **Salles** - Salles individuelles liées aux donjons
-- **Entity Framework Core** - Migrations et initialisation automatique
+## Fonctionnalités
 
-### API REST Complète
-- **Users API** - CRUD complet avec statistiques
-- **Players API** - Gestion des profils et leaderboard
-- **Dungeons API** - CRUD des donjons
-- **Rooms API** - CRUD des salles par donjon
-- **Swagger UI** - Interface de test à `/swagger`
+- **Génération procédurale** : Donjons de 5 salles avec défis variés
+- **Système RPG** : HP, XP, niveaux, statistiques de combat
+- **Actions multiples** : Combat, fuite, fouille, repos, investigation
+- **Calcul de score** : Points basés sur performance et difficulté
+- **Persistance** : Sauvegarde automatique des scores
 
-### Endpoints Principaux
+## API Endpoints
+
 ```
+# Jeu
+POST /api/game/start-adventure
+GET /api/game/session/{id}
+POST /api/game/session/{id}/action
+POST /api/game/session/{id}/next-room
+
+# CRUD
 GET/POST/PUT/DELETE /api/users
 GET/POST/PUT/DELETE /api/players
-GET/POST/PUT/DELETE /api/dungeons  
-GET/POST/PUT/DELETE /api/rooms
-GET /api/players/leaderboard
-GET /health
-GET /database-info
+GET/POST/PUT/DELETE /api/dungeons
 ```
 
 ## Installation et Lancement
 
-### Prérequis
-- .NET 9 SDK
+**Prérequis :** .NET 9 SDK
 
-### Démarrage Rapide
+**Ports :**
+- Frontend : http://localhost:5000
+- API : http://localhost:5215
+- Documentation : http://localhost:5215/swagger
+
 ```bash
-cd BlazorGameQuest1234
-dotnet run --project AuthenticationServices
+# Terminal 1 - API
+cd BlazorGameQuest1234/GameAPI
+dotnet run
+
+# Terminal 2 - Client
+cd BlazorGameQuest1234/BlazorGame.Client
+dotnet run
 ```
 
-### Tests
+## Tests
+
 ```bash
-dotnet test BlazorGameQuest.Tests
+# Exécuter les tests
+dotnet test
+
+# Avec couverture
+dotnet test --collect:"XPlat Code Coverage"
 ```
 
-### Documentation API
-Accédez à `/swagger` une fois l'API lancée
+**Résultats :** 35 tests passent - Services (DungeonGenerator, GameSession) et Contrôleurs (Users, Players, Dungeons, Rooms)
 
+## Utilisation
 
-## Auteurs
-
-Développé dans le cadre du cours .NET - Semestre 7
-EFREI Paris - Promotion LSI2
+1. Démarrer API et client
+2. Ouvrir http://localhost:5000
+3. Sélectionner joueur et difficulté
+4. Explorer 5 salles générées aléatoirement
+5. Choisir actions : Combat, Fuite, Fouille, Repos
+6. Consulter score final sauvegardé
 
 ---
+
+**EFREI Paris - Cours .NET - Semestre 7**

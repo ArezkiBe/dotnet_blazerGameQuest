@@ -1,123 +1,802 @@
 @*
-    Page principale de jeu
-    Contient la logique d'interaction avec les salles de donjon
-    Gère les actions : Combattre, Fuir, Fouiller
+    Page principale de jeu - Version 3
+    Contient l'intégration complète avec l'API pour les donjons dynamiques
+    Gère les actions : Combattre, Fuir, Fouiller et la progression entre salles
 *@
 @page "/game"
+@using SharedModels.Models
+@using BlazorGame.Client.Services
+@using BlazorGame.Client.Models
+@inject IGameApiService GameApi
+@inject IJSRuntime JSRuntime
 
 <div class="game-container">
-    <h1>🏰 Salle de Jeu - Donjon 🏰</h1>
+    <h1>🏰 BlazorGameQuest - Aventure Dynamique 🏰</h1>
     
-    <div class="game-status">
-        <div class="player-stats">
-            <h3>⚔️ État du Joueur</h3>
-            <p><strong>👤 Nom :</strong> Aventurier</p>
-            <p><strong>💰 Points :</strong> 0</p>
-            <p><strong>🚪 Salle :</strong> 1 / 5</p>
-        </div>
-    </div>
-
-    <div class="room-display">
-        <div class="room-description">
-            <h2>🏰 Salle 1 : L'Entrée du Donjon</h2>
-            <div class="room-story">
-                <p>Vous pénétrez dans une salle humide aux murs de pierre ancienne. 
-                   Des torches vacillantes projettent des ombres inquiétantes sur les murs couverts de mousse.</p>
-                   
-                <p>Soudain, un <strong>gobelin</strong> surgit des ombres, brandissant une épée rouillée !</p>
-                
-                <p class="encounter-text">💀 <em>Un gobelin vous barre la route !</em></p>
-            </div>
-        </div>
-
-        <div class="room-actions">
-            <h3>⚡ Que faites-vous ?</h3>
+    @if (gameState.SelectedPlayer == null)
+    {
+        <!-- Sélection du joueur et démarrage -->
+        <div class="game-setup">
+            <h2>🎮 Nouvelle Aventure</h2>
             
-            <div class="action-buttons">
-                <button class="btn btn-danger action-btn" @onclick="@(() => TakeAction("combat"))">
-                    ⚔️ Combattre
-                    <small>Risqué mais plus de points</small>
-                </button>
-                
-                <button class="btn btn-warning action-btn" @onclick="@(() => TakeAction("flee"))">
-                    🏃 Fuir
-                    <small>Sûr mais moins de points</small>
-                </button>
-                
-                <button class="btn btn-info action-btn" @onclick="@(() => TakeAction("search"))">
-                    🔍 Fouiller
-                    <small>Chance de trésor ou piège</small>
-                </button>
+            @if (gameState.IsLoading)
+            {
+                <div class="loading">
+                    <p>🔄 Chargement en cours...</p>
+                </div>
+            }
+            else
+            {
+                <div class="player-selection">
+                    <h3>👤 Choisissez votre aventurier :</h3>
+                    
+                    @if (availablePlayers.Any())
+                    {
+                        <div class="player-list">
+                            @foreach (var player in availablePlayers)
+                            {
+                                <button class="btn medieval-btn-player" @onclick="@(() => SelectPlayer(player))">
+                                    <strong>@player.Username</strong>
+                                    <br />
+                                    <small>Score total : @player.Score</small>
+                                </button>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            <p>Aucun joueur disponible. Vérifiez que l'API fonctionne correctement.</p>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+    else if (gameState.CurrentSession == null)
+    {
+        <!-- Étape 2: Sélection de difficulté (pas de session) -->
+        <div class="game-setup">
+            <div class="difficulty-selection">
+                <h2>🎮 Nouvelle Aventure</h2>
+                <h3>👤 Joueur : @gameState.SelectedPlayer.Username</h3>
+                <h4>🎯 Niveau de difficulté :</h4>
+                <div class="difficulty-buttons">
+                    <button class="btn medieval-btn-easy" @onclick="@(() => StartNewAdventure(1))" disabled="@gameState.IsLoading">⚔️ Facile</button>
+                    <button class="btn medieval-btn-normal" @onclick="@(() => StartNewAdventure(2))" disabled="@gameState.IsLoading">🛡️ Normal</button>
+                    <button class="btn medieval-btn-hard" @onclick="@(() => StartNewAdventure(3))" disabled="@gameState.IsLoading">🔥 Difficile</button>
+                </div>
+                <div class="mt-3">
+                    <button class="medieval-btn-action" @onclick="ChangePlayer">
+                        👤 Changer de Joueur
+                    </button>
+                </div>
             </div>
         </div>
-
-        @if (!string.IsNullOrEmpty(actionResult))
-        {
-            <div class="action-result">
-                <div class="alert alert-info">
-                    <h4>Résultat de l'action :</h4>
-                    <p>@actionResult</p>
+    }
+    else if (gameState.IsGameActive)
+    {
+        <!-- Étape 3: Jeu en cours (session active) -->
+        <div class="game-status">
+            <div class="player-stats">
+                <h3>⚔️ AVENTURIER</h3>
+                
+                <!-- Informations de base fixes -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p><strong>👤 Nom :</strong> @gameState.SelectedPlayer?.Username</p>
+                        <p><strong>⭐ Niveau :</strong> @(gameState.CurrentSession?.Level ?? 1)</p>
+                        <p><strong>🎯 Expérience :</strong> @(gameState.CurrentSession?.ExperiencePoints ?? 0) / @GetRequiredXPForLevel((gameState.CurrentSession?.Level ?? 1) + 1) XP</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>⚔️ Attaque :</strong> @(gameState.CurrentSession?.AttackDamage ?? 0) dégâts</p>
+                        <p><strong>🛡️ Défense :</strong> @(gameState.CurrentSession?.Defense ?? 0) réduction</p>
+                        <p><strong>🚪 Donjon :</strong> Salle @(gameState.CurrentSession?.CurrentRoomNumber ?? 0) / @(gameState.CurrentSession?.Dungeon?.TotalRooms ?? 0)</p>
+                    </div>
+                </div>
+                
+                <!-- Barres de progression -->
+                @{
+                    var hpPercentage = gameState.CurrentSession != null && gameState.CurrentSession.MaxHP > 0 
+                        ? (double)gameState.CurrentSession.CurrentHP / gameState.CurrentSession.MaxHP * 100 
+                        : 100;
+                    var hpBarColor = hpPercentage > 60 ? "bg-success" : hpPercentage > 30 ? "bg-warning" : "bg-danger";
                     
-                    <div class="next-actions">
-                        <button class="btn btn-primary" @onclick="NextRoom">
-                            🚪 Passer à la salle suivante
-                        </button>
-                        <button class="btn btn-secondary" @onclick="ResetRoom">
-                            🔄 Refaire cette salle
-                        </button>
+                    var currentLevel = gameState.CurrentSession?.Level ?? 1;
+                    var currentXP = gameState.CurrentSession?.ExperiencePoints ?? 0;
+                    var requiredXP = GetRequiredXPForLevel(currentLevel + 1);
+                    var previousLevelXP = currentLevel <= 1 ? 0 : GetRequiredXPForLevel(currentLevel);
+                    var xpProgress = requiredXP > previousLevelXP ? (double)(currentXP - previousLevelXP) / (requiredXP - previousLevelXP) * 100 : 0;
+                }
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div><strong>❤️ Santé :</strong> @(gameState.CurrentSession?.CurrentHP ?? 0) / @(gameState.CurrentSession?.MaxHP ?? 0) HP</div>
+                        <div class="medieval-progress-container mb-2">
+                            <div class="medieval-progress-bar medieval-hp-@hpBarColor" 
+                                 style="width: @hpPercentage%" 
+                                 aria-valuenow="@(gameState.CurrentSession?.CurrentHP ?? 0)" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="@(gameState.CurrentSession?.MaxHP ?? 0)">
+                            </div>
+                        </div>
+                        @if ((gameState.CurrentSession?.CurrentHP ?? 0) <= 20)
+                        {
+                            <div class="medieval-danger-warning mb-2">
+                                ⚠️ <strong>SANTÉ CRITIQUE !</strong> Votre aventurier est gravement blessé !
+                            </div>
+                        }
+                    </div>
+                    <div class="col-md-6">
+                        <div><strong>🎯 Progression XP :</strong> @Math.Round(xpProgress)%</div>
+                        <div class="medieval-progress-container mb-2">
+                            <div class="medieval-progress-bar medieval-xp" 
+                                 style="width: @xpProgress%" 
+                                 role="progressbar" 
+                                 aria-valuenow="@currentXP" 
+                                 aria-valuemin="@previousLevelXP" 
+                                 aria-valuemax="@requiredXP">
+                                 @if (xpProgress > 20) { <small class="progress-text">@Math.Round(xpProgress)%</small> }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Score actuel en cours de partie -->
+                @{
+                    var currentScore = CalculateCurrentScore();
+                }
+                <div class="medieval-score-box">
+                    <div class="score-header mb-2">
+                        <strong>🎯 Score actuel : @currentScore.TotalScore points</strong>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="score-detail">⚔️ Base: @currentScore.BaseScore</div>
+                            <div class="score-detail">⭐ XP: +@currentScore.XpBonus</div>
+                            <div class="score-detail">🗺️ Exploration: +@currentScore.ExplorationBonus</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="score-detail">📈 Niveau: +@currentScore.LevelBonus</div>
+                            <div class="score-detail">🔥 Multiplicateur: ×@(Math.Round(currentScore.DifficultyMultiplier, 2))</div>
+                            <div class="score-detail">💰 <strong>Total session: @(gameState.CurrentSession?.CurrentScore ?? 0)</strong></div>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
+
+        @if (gameState.CurrentRoom != null)
+        {
+            <div class="room-display">
+                <div class="room-description">
+                    <h2>@gameState.CurrentRoom.Title</h2>
+                    
+                    <!-- Indicateur du type de salle -->
+                    @{
+                        var roomTypeIcon = gameState.CurrentRoom.Type switch {
+                            RoomType.Monster => "🐹",
+                            RoomType.Treasure => "💰",
+                            RoomType.Trap => "⚠️",
+                            RoomType.Empty => "🚫",
+                            RoomType.Rest => "✨",
+                            RoomType.Mystery => "🔮",
+                            _ => "🏠"
+                        };
+                        var roomTypeName = gameState.CurrentRoom.Type switch {
+                            RoomType.Monster => "Salle de Combat",
+                            RoomType.Treasure => "Chambre au Trésor",
+                            RoomType.Trap => "Salle Piégée",
+                            RoomType.Empty => "Salle Vide",
+                            RoomType.Rest => "Salle de Repos",
+                            RoomType.Mystery => "Salle Mystérieuse",
+                            _ => "Salle Standard"
+                        };
+                    }
+                    <div class="room-type-badge mb-2">
+                        <span class="badge bg-secondary">@roomTypeIcon @roomTypeName</span>
+                    </div>
+                    
+                    <div class="room-story">
+                        <p>@gameState.CurrentRoom.Description</p>
+                        
+                        @if (!string.IsNullOrEmpty(gameState.CurrentRoom.EncounterType))
+                        {
+                            <p class="encounter-text">💀 <em>Un @gameState.CurrentRoom.EncounterType vous barre la route !</em></p>
+                        }
+                    </div>
+                </div>
+
+                @if (!gameState.IsWaitingForProgression && string.IsNullOrEmpty(gameState.ResultMessage))
+                {
+                    <div class="room-actions">
+                        <h3>⚡ Que faites-vous ?</h3>
+                        
+                        <div class="action-buttons">
+                            @if (gameState.AvailableActions.Contains("Combat"))
+                            {
+                                <button class="btn btn-danger action-btn" @onclick="@(() => PerformAction(ActionType.Combat))" disabled="@gameState.IsLoading">
+                                    ⚔️ Combattre
+                                    <small class="d-block">Risqué ! Coûte de la santé mais plus de points</small>
+                                </button>
+                            }
+                            
+                            @if (gameState.AvailableActions.Contains("Flee"))
+                            {
+                                <button class="medieval-btn-action" @onclick="@(() => PerformAction(ActionType.Flee))" disabled="@gameState.IsLoading">
+                                    🏃 Fuir
+                                    <small class="d-block medieval-text-safe">✓ Sécuritaire ! Aucun risque HP</small>
+                                </button>
+                            }
+                            
+                            @if (gameState.AvailableActions.Contains("OpenChest"))
+                            {
+                                <button class="btn btn-warning action-btn" @onclick="@(() => PerformAction(ActionType.OpenChest))" disabled="@gameState.IsLoading">
+                                    💰 Ouvrir Coffre
+                                    <small class="d-block">Trésor garanti ! Attention aux pièges</small>
+                                </button>
+                            }
+                            
+                            @if (gameState.AvailableActions.Contains("Rest"))
+                            {
+                                <button class="btn btn-success action-btn" @onclick="@(() => PerformAction(ActionType.Rest))" disabled="@gameState.IsLoading">
+                                    🛌 Se Reposer
+                                    <small class="d-block medieval-text-safe">✨ Récupère de la santé !</small>
+                                </button>
+                            }
+                            
+                            @if (gameState.AvailableActions.Contains("Investigate"))
+                            {
+                                <button class="medieval-btn-action" @onclick="@(() => PerformAction(ActionType.Investigate))" disabled="@gameState.IsLoading">
+                                    🔮 Investiguer
+                                    <small class="d-block medieval-text-danger">⚡ TRÈS RISQUÉ ! Gros gains potentiels</small>
+                                </button>
+                            }
+                            
+                            @if (gameState.AvailableActions.Contains("Bypass"))
+                            {
+                                <button class="btn btn-info action-btn" @onclick="@(() => PerformAction(ActionType.Bypass))" disabled="@gameState.IsLoading">
+                                    🚶 Contourner
+                                    <small class="d-block medieval-text-safe">✓ Sécuritaire ! Contourne les pièges</small>
+                                </button>
+                            }
+                            
+                            @if (gameState.AvailableActions.Contains("Search"))
+                            {
+                                <button class="btn btn-info action-btn" @onclick="@(() => PerformAction(ActionType.Search))" disabled="@gameState.IsLoading">
+                                    🔍 Fouiller
+                                    <small class="d-block">Risque de piège ! Peut coûter des HP</small>
+                                </button>
+                            }
+                            
+                            @if (gameState.AvailableActions.Contains("Ignore"))
+                            {
+                                <button class="btn medieval-btn-action" @onclick="@(() => PerformAction(ActionType.Ignore))" disabled="@gameState.IsLoading">
+                                    ➡️ Ignorer
+                                    <small class="d-block medieval-text-safe">✓ Sécuritaire ! Aucun risque HP</small>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(gameState.ResultMessage))
+                {
+                    <div class="action-result">
+                        <div class="alert alert-info">
+                            <h4>💫 Résultat de l'action :</h4>
+                            <p>@gameState.ResultMessage</p>
+                            
+                            <!-- Afficher les conséquences sur la santé et XP -->
+                            @if (gameState.LastAction != null)
+                            {
+                                @if (gameState.LastAction.IsSuccessful)
+                                {
+                                    <div class="medieval-alert-success">
+                                        🎆 <strong>Succès !</strong> +@(gameState.LastAction.PointsEarned) points
+                                        @if (gameState.ResultMessage.Contains("HP"))
+                                        {
+                                            <br/><span class="medieval-text-danger">⚔️ Même en victoire, le combat vous coûte de la santé !</span>
+                                        }
+                                        @if (gameState.ResultMessage.Contains("XP"))
+                                        {
+                                            <br/><span class="medieval-text-success">✨ Vous gagnez de l'expérience de cette action !</span>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-danger p-2">
+                                        💀 <strong>Échec !</strong> @(gameState.LastAction.PointsEarned) points
+                                        @if (gameState.ResultMessage.Contains("HP"))
+                                        {
+                                            <br/><span class="text-danger">⚠️ Vous subissez de lourds dégâts !</span>
+                                        }
+                                        @if (gameState.ResultMessage.Contains("XP"))
+                                        {
+                                            <br/><span class="text-info">✨ Malgré l'échec, vous apprenez de l'expérience !</span>
+                                        }
+                                    </div>
+                                }
+                                
+                                <!-- Notification spéciale de level up -->
+                                @if (gameState.ResultMessage.Contains("NIVEAU SUPÉRIEUR"))
+                                {
+                                    <div class="medieval-alert-levelup">
+                                        🎊 <strong>FÉLICITATIONS ! NIVEAU SUPÉRIEUR !</strong><br/>
+                                        🔥 Vos statistiques ont augmenté !<br/>
+                                        <span class="medieval-text-stats">💪 +10 HP Max | ⚔️ +5 Attaque | 🛡️ +2 Défense</span>
+                                    </div>
+                                }
+                            }
+                            
+                            @if (gameState.LastAction?.ItemFound != null)
+                            {
+                                <p class="medieval-text-loot"><strong>🎁 Objet trouvé :</strong> @gameState.LastAction.ItemFound</p>
+                            }
+                            
+                            <!-- Afficher avertissement si HP bas -->
+                            @if ((gameState.CurrentSession?.CurrentHP ?? 0) <= 30 && (gameState.CurrentSession?.CurrentHP ?? 0) > 0)
+                            {
+                                <div class="alert alert-warning p-2 mt-2">
+                                    ⚠️ <strong>ATTENTION :</strong> Votre santé est faible ! Soyez prudent dans vos prochaines actions.
+                                </div>
+                            }
+                            
+                            <div class="next-actions">
+                                @if (gameState.CurrentSession?.Status == GameStatus.Active)
+                                {
+                                    <button class="btn btn-primary" @onclick="NextRoom" disabled="@gameState.IsLoading">
+                                        🚪 Passer à la salle suivante
+                                    </button>
+                                }
+                                <button class="btn btn-danger" @onclick="EndGame">
+                                    🛑 Terminer la partie
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
         }
-    </div>
+        else if (gameState.IsLoading)
+        {
+            <div class="loading">
+                <p>🔄 Chargement de la salle...</p>
+            </div>
+        }
+    }
+    else
+    {
+        <!-- Étape 4: Fin de partie (session terminée - Completed, Failed, ou Dead) -->
+        <div class="game-over">
+            @if (gameState.CurrentSession.Status == GameStatus.Dead)
+            {
+                <h2>💀 VOUS ÊTES MORT!</h2>
+                <div class="death-message">
+                    <p class="text-danger"><strong>Vos points de vie sont tombés à zéro...</strong></p>
+                </div>
+            }
+            else if (gameState.CurrentSession.Status == GameStatus.Completed)
+            {
+                <h2>🎉 VICTOIRE!</h2>
+                <div class="victory-message">
+                    <p class="medieval-text-victory"><strong>Félicitations ! Vous avez terminé le donjon !</strong></p>
+                </div>
+            }
+            else
+            {
+                <h2>🎮 Partie Abandonnée</h2>
+                <div class="abandon-message">
+                    <p class="medieval-text-abandon"><strong>Vous avez abandonné l'aventure...</strong></p>
+                </div>
+            }
+            
+            <div class="final-score">
+                <h3>📋 STATISTIQUES DE CETTE AVENTURE</h3>
+                
+                <!-- Score final avec breakdown -->
+                <div class="alert alert-success p-3 mb-3">
+                    <h4 class="mb-3">🏆 SCORE FINAL : @(gameState.CurrentSession?.CurrentScore ?? 0) POINTS</h4>
+                    
+                    <h6>📊 Détail du calcul :</h6>
+                    <div class="score-breakdown">
+                        @{
+                            var session = gameState.CurrentSession;
+                            var roomsExplored = session?.Status == GameStatus.Completed 
+                                ? session?.Dungeon?.TotalRooms ?? 5  // Si complété, utilise le total des salles du donjon
+                                : ((session?.CurrentRoomNumber ?? 1) - 1);  // Sinon, utilise les salles visitées
+                            var xpGained = session?.ExperiencePoints ?? 0;
+                            var levelReached = session?.Level ?? 1;
+                            var difficultyLevel = session?.Dungeon?.DifficultyLevel ?? 1;
+                            var currentHP = session?.CurrentHP ?? 0;
+                            
+                            // Calcul des bonus (approximation côté client)
+                            var explorationBonus = roomsExplored * 50;
+                            var xpBonus = xpGained;
+                            var levelBonus = (levelReached - 1) * 100;
+                            var difficultyMultiplier = (int)(1 + difficultyLevel * 0.2);
+                        }
+                        
+                        <small class="d-block">🎯 Bonus XP : +@xpBonus points (@xpGained XP)</small>
+                        <small class="d-block">🗺️ Bonus Exploration : +@explorationBonus points (@roomsExplored salles × 50)</small>
+                        <small class="d-block">⭐ Bonus Niveau : +@levelBonus points (niveau @levelReached)</small>
+                        <small class="d-block">🔥 Multiplicateur Difficulté : ×@difficultyMultiplier (niveau @difficultyLevel)</small>
+                        
+                        @if (session?.Status == GameStatus.Completed)
+                        {
+                            var survivalBonus = currentHP * 2;
+                            <small class="d-block medieval-text-victory">🏆 Bonus Victoire : +500 points</small>
+                            <small class="d-block medieval-text-victory">💚 Bonus Survie : +@survivalBonus points (@currentHP HP × 2)</small>
+                        }
+                        else if (session?.Status == GameStatus.Dead)
+                        {
+                            <small class="d-block medieval-text-death">☠️ Pas de bonus de victoire (mort héroïque)</small>
+                        }
+                        else if (session?.Status == GameStatus.Failed)
+                        {
+                            <small class="d-block text-danger">🚪 Malus abandon : -20% des bonus</small>
+                        }
+                    </div>
+                </div>
+                
+                <!-- Statistiques détaillées -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>🎮 Performance de jeu</h6>
+                        <p><strong>🚺 Progression :</strong> @roomsExplored / @(session?.Dungeon?.TotalRooms ?? 0) salles</p>
+                        <p><strong>⭐ Niveau final :</strong> @(session?.Level ?? 1)</p>
+                        <p><strong>🎯 XP totale :</strong> @(session?.ExperiencePoints ?? 0) points</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>⚔️ État final du héros</h6>
+                        <p><strong>❤️ HP restants :</strong> @(session?.CurrentHP ?? 0) / @(session?.MaxHP ?? 0)</p>
+                        <p><strong>⚔️ Force :</strong> @(session?.AttackDamage ?? 0) attaque</p>
+                        <p><strong>🛡️ Défense :</strong> @(session?.Defense ?? 0) résistance</p>
+                    </div>
+                </div>
+                
+                <!-- Statut de fin -->
+                @if (session?.Status == GameStatus.Completed)
+                {
+                    <div class="alert alert-success">
+                        🎊 <strong>VICTOIRE !</strong> Vous avez conquis le donjon avec succès !
+                    </div>
+                }
+                else if (session?.Status == GameStatus.Dead)
+                {
+                    <div class="alert alert-danger">
+                        ⚰️ <strong>MORT HÉROÏQUE</strong> - Vous êtes tombé en combattant vaillamment !
+                    </div>
+                }
+                else if (session?.Status == GameStatus.Failed)
+                {
+                    <div class="alert alert-warning">
+                        🚪 <strong>RETRAITE</strong> - Vous avez quitté l'aventure prématurément.
+                    </div>
+                }
+            </div>
+            
+            <div class="game-actions">
+                <button class="medieval-btn-secondary" @onclick="StartNewGame">
+                    🆕 Nouvelle Aventure
+                </button>
+                <button class="medieval-btn-action" @onclick="ChangePlayer">
+                    👤 Changer de Joueur
+                </button>
+            </div>
+        </div>
+    }
+    
+    @if (!string.IsNullOrEmpty(gameState.ErrorMessage))
+    {
+        <div class="alert alert-danger">
+            <h4>⚠️ Erreur :</h4>
+            <p>@gameState.ErrorMessage</p>
+            <button class="btn btn-sm btn-secondary" @onclick="ClearError">Fermer</button>
+        </div>
+    }
 </div>
 
 @code {
     /// <summary>
-    /// Résultat de la dernière action effectuée par le joueur
-    /// Affiché dans la section des résultats d'action
+    /// État du jeu côté client
     /// </summary>
-    private string actionResult = "";
+    private GameState gameState = new GameState();
     
     /// <summary>
-    /// Traite l'action choisie par le joueur dans la salle de donjon
+    /// Liste des joueurs disponibles
     /// </summary>
-    /// <param name="action">Type d'action : "combat", "flee", ou "search"</param>
-    private void TakeAction(string action)
+    private List<Player> availablePlayers = new List<Player>();
+
+    /// <summary>
+    /// Initialisation du composant
+    /// </summary>
+    protected override async Task OnInitializedAsync()
     {
-        // Traitement des différentes actions possibles
-        switch (action.ToLower())
+        await LoadPlayersAsync();
+    }
+
+    /// <summary>
+    /// Charge la liste des joueurs disponibles
+    /// </summary>
+    private async Task LoadPlayersAsync()
+    {
+        gameState.IsLoading = true;
+        try
         {
-            case "combat":
-                // Action combattre : risqué mais plus de points
-                actionResult = "⚔️ Vous attaquez le gobelin avec courage ! Après un combat acharné, vous le vainquez. Vous gagnez 15 points !";
-                break;
-            case "flee":
-                // Action fuir : sûr mais moins de points
-                actionResult = "🏃 Vous fuyez prudemment vers la sortie de la salle. Vous évitez le danger mais ne gagnez que 5 points.";
-                break;
-            case "search":
-                // Action fouiller : chance de trésor ou piège
-                actionResult = "🔍 Vous fouillez la salle et trouvez un coffre caché ! À l'intérieur, une potion de soin et 10 pièces d'or. Vous gagnez 12 points !";
-                break;
+            availablePlayers = await GameApi.GetPlayersAsync();
+        }
+        catch (Exception ex)
+        {
+            gameState.ErrorMessage = $"Erreur lors du chargement des joueurs : {ex.Message}";
+        }
+        finally
+        {
+            gameState.IsLoading = false;
         }
     }
-    
+
     /// <summary>
-    /// Avance vers la salle suivante du donjon
-    /// Version 1 : Affiche un message, fonctionnalité complète à venir en Version 2
+    /// Sélectionne un joueur pour la partie
     /// </summary>
-    private void NextRoom()
+    private void SelectPlayer(Player player)
     {
-        actionResult = "🚪 Vous avancez vers la salle suivante... (Fonctionnalité à venir)";
+        // Reset complet de l'état avant de sélectionner un nouveau joueur
+        gameState.Reset();
+        gameState.SelectedPlayer = player;
+        gameState.ErrorMessage = null;
     }
-    
+
+
+
     /// <summary>
-    /// Remet à zéro les résultats d'action pour recommencer la salle
-    /// Permet au joueur de refaire ses choix dans la salle actuelle
+    /// Démarre une nouvelle aventure
     /// </summary>
-    private void ResetRoom()
+    private async Task StartNewAdventure(int difficulty)
     {
-        actionResult = "";
+        if (gameState.SelectedPlayer == null) return;
+
+        gameState.IsLoading = true;
+        // Reset complet de l'état du jeu avant de démarrer
+        gameState.CurrentRoom = null;
+        gameState.LastAction = null;
+        gameState.ResultMessage = null;
+        gameState.IsWaitingForProgression = false;
+        gameState.AvailableActions = Array.Empty<string>();
+        gameState.RecentActions.Clear();
+        gameState.ErrorMessage = null;
+
+        try
+        {
+            var session = await GameApi.StartNewAdventureAsync(gameState.SelectedPlayer.Id, difficulty);
+            if (session != null)
+            {
+                gameState.CurrentSession = session;
+                await LoadCurrentSessionAsync(session.Id);
+            }
+            else
+            {
+                gameState.ErrorMessage = "Impossible de démarrer l'aventure";
+            }
+        }
+        catch (Exception ex)
+        {
+            gameState.ErrorMessage = $"Erreur lors du démarrage : {ex.Message}";
+        }
+        finally
+        {
+            gameState.IsLoading = false;
+        }
+    }
+
+    /// <summary>
+    /// Charge les détails de la session actuelle
+    /// </summary>
+    private async Task LoadCurrentSessionAsync(int sessionId)
+    {
+        try
+        {
+            var details = await GameApi.GetGameSessionAsync(sessionId);
+            if (details != null)
+            {
+                gameState.UpdateFromSessionDetails(details);
+            }
+        }
+        catch (Exception ex)
+        {
+            gameState.ErrorMessage = $"Erreur lors du chargement de la session : {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Effectue une action dans la salle actuelle
+    /// </summary>
+    private async Task PerformAction(ActionType actionType)
+    {
+        if (gameState.CurrentSession == null) return;
+
+        gameState.IsLoading = true;
+        try
+        {
+            var action = await GameApi.PerformActionAsync(gameState.CurrentSession.Id, actionType);
+            if (action != null)
+            {
+                gameState.UpdateFromAction(action);
+                
+                // Recharger la session pour obtenir le score mis à jour
+                await LoadCurrentSessionAsync(gameState.CurrentSession.Id);
+            }
+            else
+            {
+                gameState.ErrorMessage = "Erreur lors de l'action";
+            }
+        }
+        catch (Exception ex)
+        {
+            gameState.ErrorMessage = $"Erreur lors de l'action : {ex.Message}";
+        }
+        finally
+        {
+            gameState.IsLoading = false;
+        }
+    }
+
+    /// <summary>
+    /// Passe à la salle suivante
+    /// </summary>
+    private async Task NextRoom()
+    {
+        if (gameState.CurrentSession == null) return;
+
+        gameState.IsLoading = true;
+        try
+        {
+            var result = await GameApi.MoveToNextRoomAsync(gameState.CurrentSession.Id);
+            if (result != null)
+            {
+                gameState.ResultMessage = result.Message;
+                gameState.CurrentSession = result.Session;
+                gameState.CurrentRoom = result.CurrentRoom;
+                gameState.IsWaitingForProgression = false;
+                
+                // Si la partie est terminée, afficher le résultat final
+                if (gameState.CurrentSession?.Status != GameStatus.Active)
+                {
+                    // La partie est terminée, recharger les joueurs pour afficher le score mis à jour
+                    await LoadPlayersAsync();
+                }
+                else
+                {
+                    // Recharger les détails pour la nouvelle salle
+                    await LoadCurrentSessionAsync(gameState.CurrentSession.Id);
+                    gameState.ResultMessage = null;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            gameState.ErrorMessage = $"Erreur lors de la progression : {ex.Message}";
+        }
+        finally
+        {
+            gameState.IsLoading = false;
+        }
+    }
+
+
+
+    /// <summary>
+    /// Termine la partie actuelle
+    /// </summary>
+    private async Task EndGame()
+    {
+        if (gameState.CurrentSession == null) return;
+
+        try
+        {
+            await GameApi.EndSessionAsync(gameState.CurrentSession.Id, "Abandon volontaire");
+            gameState.CurrentSession.Status = GameStatus.Failed;
+            
+            // Recharger les joueurs pour afficher le score mis à jour
+            await LoadPlayersAsync();
+        }
+        catch (Exception ex)
+        {
+            gameState.ErrorMessage = $"Erreur lors de la fin de partie : {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Démarre une nouvelle partie - remet à zéro la session actuelle
+    /// </summary>
+    private async Task StartNewGame()
+    {
+        // Reset de la session et des éléments de jeu, mais garde le joueur sélectionné
+        gameState.CurrentSession = null;
+        gameState.CurrentRoom = null;
+        gameState.LastAction = null;
+        gameState.ErrorMessage = null;
+        gameState.ResultMessage = null;
+        gameState.IsWaitingForProgression = false;
+        gameState.AvailableActions = Array.Empty<string>();
+        gameState.RecentActions.Clear();
+        
+        // Recharger les joueurs pour afficher les scores mis à jour
+        await LoadPlayersAsync();
+        
+        // Le joueur reste sélectionné, on retourne à la sélection de difficulté
+    }
+
+    /// <summary>
+    /// Change de joueur - retourne à la sélection de joueur
+    /// </summary>
+    private async Task ChangePlayer()
+    {
+        // Reset complet incluant le joueur sélectionné
+        gameState.Reset();
+        gameState.SelectedPlayer = null;
+        
+        // Recharger les joueurs pour afficher les scores mis à jour
+        await LoadPlayersAsync();
+    }
+
+
+
+    /// <summary>
+    /// Efface le message d'erreur
+    /// </summary>
+    private void ClearError()
+    {
+        gameState.ErrorMessage = null;
+    }
+
+    /// <summary>
+    /// Calcule l'XP requis pour atteindre un niveau donné (même formule que le serveur)
+    /// </summary>
+    private int GetRequiredXPForLevel(int level)
+    {
+        // Formule progressive : Niveau 1=0, Niveau 2=50, Niveau 3=150, Niveau 4=300, etc.
+        return level <= 1 ? 0 : (level - 1) * 50 + (level - 2) * 25;
+    }
+
+    /// <summary>
+    /// Calcule le score actuel en cours de partie
+    /// </summary>
+    private (int TotalScore, int BaseScore, int XpBonus, int ExplorationBonus, int LevelBonus, double DifficultyMultiplier) CalculateCurrentScore()
+    {
+        if (gameState.CurrentSession == null)
+        {
+            return (0, 0, 0, 0, 0, 1.0);
+        }
+
+        var session = gameState.CurrentSession;
+        
+        // Score de base (score actuel de la session)
+        var baseScore = session.CurrentScore;
+        
+        // Bonus XP (1 point par XP)
+        var xpBonus = session.ExperiencePoints;
+        
+        // Bonus d'exploration (50 points par salle explorée)
+        // Si la partie est terminée avec succès, on compte toutes les salles
+        var explorationBonus = session.Status == GameStatus.Completed
+            ? 5 * 50  // 5 salles complètement explorées
+            : (session.CurrentRoomNumber - 1) * 50;
+        
+        // Bonus de niveau (100 points par niveau au-dessus de 1)
+        var levelBonus = Math.Max(0, session.Level - 1) * 100;
+        
+        // Multiplicateur de difficulté : utilise le niveau de difficulté du donjon
+        var dungeonDifficulty = session.Dungeon?.DifficultyLevel ?? 1;
+        var difficultyMultiplier = 1.0 + dungeonDifficulty * 0.2; // +20% par niveau de difficulté
+        
+        // Score total avant multiplicateur
+        var scoreBeforeMultiplier = baseScore + xpBonus + explorationBonus + levelBonus;
+        
+        // Application du multiplicateur de difficulté
+        var totalScore = (int)Math.Round(scoreBeforeMultiplier * difficultyMultiplier);
+        
+        return (totalScore, baseScore, xpBonus, explorationBonus, levelBonus, difficultyMultiplier);
     }
 }

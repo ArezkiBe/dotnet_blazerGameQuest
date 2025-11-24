@@ -1,40 +1,29 @@
-/// <summary>
-/// Classe représentant un joueur du jeu
-/// </summary>
 namespace SharedModels.Models;
 
 /// <summary>
-/// Classe représentant un joueur du jeu
+/// Profil joueur avec statistiques et progression
 /// </summary>
 public class Player
 {
-    /// <summary>
-    /// Identifiant unique du joueur
-    /// </summary>
     public int Id { get; set; }
     
     /// <summary>
-    /// Référence vers l'utilisateur associé
+    /// Utilisateur associé à ce profil joueur
     /// </summary>
     public int UserId { get; set; }
     
-    /// <summary>
-    /// Nom d'utilisateur choisi par le joueur
-    /// </summary>
     public string Username { get; set; } = string.Empty;
     
     /// <summary>
-    /// Score total accumulé par le joueur
+    /// Score total cumulé de toutes les parties
     /// </summary>
     public int Score { get; set; } = 0;
     
-    /// <summary>
-    /// Numéro de la salle actuelle (1-5)
-    /// </summary>
     public int CurrentRoom { get; set; } = 1;
     
-    /// <summary>
-    /// Date de création du compte joueur
-    /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    
+    // Relations
+    public virtual ICollection<GameSession> GameSessions { get; set; } = new List<GameSession>();
+    public virtual User? User { get; set; }
 }

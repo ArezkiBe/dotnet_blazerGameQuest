@@ -42,6 +42,16 @@ public class User
     /// Dernière connexion
     /// </summary>
     public DateTime? LastLoginAt { get; set; }
+    
+    /// <summary>
+    /// Profil joueur associé (si applicable)
+    /// </summary>
+    public virtual Player? Player { get; set; }
+    
+    /// <summary>
+    /// Profil administrateur associé (si applicable)
+    /// </summary>
+    public virtual Administrator? Administrator { get; set; }
 }
 
 /// <summary>

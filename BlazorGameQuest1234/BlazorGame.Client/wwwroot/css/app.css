@@ -85,7 +85,7 @@ h1, h2, h3, h4, h5, h6 {
 h1 {
     font-size: 2.5rem;
     color: var(--brand-primary);
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    text-shadow: none;
 }
 
 h1:focus {
@@ -284,7 +284,7 @@ a:hover, .btn-link:hover {
     font-family: 'Courier New', monospace;
     color: #8b4513;
     font-size: 1.1rem;
-    text-shadow: 1px 1px 0px #fff;
+    text-shadow: none;
     inset: calc(20vh + 3.25rem) 0 auto 0.2rem;
 }
 

@@ -23,7 +23,7 @@
     <ProjectReference Include="..\SharedModels\SharedModels.csproj" />
     <ProjectReference Include="..\DataAccess\DataAccess.csproj" />
     <ProjectReference Include="..\BlazorGame.Client\BlazorGame.Client.csproj" />
-    <ProjectReference Include="..\AuthenticationServices\AuthenticationServices.csproj" />
+    <ProjectReference Include="..\GameAPI\GameAPI.csproj" />
   </ItemGroup>
 
 </Project>

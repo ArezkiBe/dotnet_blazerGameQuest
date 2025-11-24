@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedModels", "SharedModel
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorGame.Client", "BlazorGame.Client\BlazorGame.Client.csproj", "{3DF0C1F3-5176-476B-8EEC-DB569C38A63F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthenticationServices", "AuthenticationServices\AuthenticationServices.csproj", "{F62492AC-23D7-4003-9D3D-8975019A4F02}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameAPI", "GameAPI\GameAPI.csproj", "{F62492AC-23D7-4003-9D3D-8975019A4F02}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorGameQuest.Tests", "BlazorGameQuest.Tests\BlazorGameQuest.Tests.csproj", "{6CB9E172-6A82-428F-A2B9-A89AE3726AF6}"
 EndProject

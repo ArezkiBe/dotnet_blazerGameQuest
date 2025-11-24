@@ -44,6 +44,16 @@ public class GameDbContext : DbContext
     /// Table des salles
     /// </summary>
     public DbSet<Room> Rooms { get; set; }
+    
+    /// <summary>
+    /// Table des sessions de jeu
+    /// </summary>
+    public DbSet<GameSession> GameSessions { get; set; }
+    
+    /// <summary>
+    /// Table des actions de jeu
+    /// </summary>
+    public DbSet<GameAction> GameActions { get; set; }
 
     /// <summary>
     /// Configuration des modèles et relations
@@ -76,9 +86,9 @@ public class GameDbContext : DbContext
             entity.Property(e => e.Username)
                   .IsRequired()
                   .HasMaxLength(50);
-            entity.HasOne<User>()
-                  .WithMany()
-                  .HasForeignKey(e => e.UserId)
+            entity.HasOne(p => p.User)
+                  .WithOne(u => u.Player)
+                  .HasForeignKey<Player>(p => p.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -86,9 +96,9 @@ public class GameDbContext : DbContext
         modelBuilder.Entity<Administrator>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.HasOne<User>()
-                  .WithMany()
-                  .HasForeignKey(e => e.UserId)
+            entity.HasOne(a => a.User)
+                  .WithOne(u => u.Administrator)
+                  .HasForeignKey<Administrator>(a => a.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -114,11 +124,47 @@ public class GameDbContext : DbContext
                   .HasMaxLength(1000);
             entity.Property(e => e.EncounterType)
                   .HasMaxLength(50);
-            entity.HasOne<Dungeon>()
-                  .WithMany()
-                  .HasForeignKey(e => e.DungeonId)
+            entity.HasOne(r => r.Dungeon)
+                  .WithMany(d => d.Rooms)
+                  .HasForeignKey(r => r.DungeonId)
                   .OnDelete(DeleteBehavior.Cascade);
             entity.HasIndex(e => new { e.DungeonId, e.RoomNumber }).IsUnique();
+        });
+        
+        // Configuration de la table GameSessions
+        modelBuilder.Entity<GameSession>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Status)
+                  .HasConversion<string>();
+            entity.HasOne(gs => gs.Player)
+                  .WithMany(p => p.GameSessions)
+                  .HasForeignKey(gs => gs.PlayerId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(gs => gs.Dungeon)
+                  .WithMany(d => d.GameSessions)
+                  .HasForeignKey(gs => gs.DungeonId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        // Configuration de la table GameActions
+        modelBuilder.Entity<GameAction>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ActionType)
+                  .HasConversion<string>();
+            entity.Property(e => e.ResultDescription)
+                  .HasMaxLength(500);
+            entity.Property(e => e.ItemFound)
+                  .HasMaxLength(100);
+            entity.HasOne(ga => ga.GameSession)
+                  .WithMany(gs => gs.Actions)
+                  .HasForeignKey(ga => ga.GameSessionId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(ga => ga.Room)
+                  .WithMany(r => r.Actions)
+                  .HasForeignKey(ga => ga.RoomId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
