@@ -18,7 +18,7 @@
             <h3>⚡ Prêt à commencer ?</h3>
             <p>Une nouvelle aventure vous attend dans les profondeurs du donjon...</p>
             
-            <button class="btn btn-success btn-lg" @onclick="StartAdventure">
+            <button class="medieval-btn-primary" @onclick="StartAdventure">
                 🗡️ Commencer l'Aventure 🗡️
             </button>
         </div>
@@ -26,10 +26,10 @@
         @if (adventureStarted)
         {
             <div class="adventure-started">
-                <div class="alert alert-info">
+                <div class="medieval-alert-success">
                     <h4>🏰 Aventure Démarrée !</h4>
                     <p>🌙 Vous entrez dans le donjon... Les ombres dansent sur les murs humides. 🌙</p>
-                    <a href="game" class="btn btn-primary">🚪 Entrer dans la première salle 🚪</a>
+                    <a href="game" class="medieval-btn-secondary">🚪 Entrer dans la première salle 🚪</a>
                 </div>
             </div>
         }

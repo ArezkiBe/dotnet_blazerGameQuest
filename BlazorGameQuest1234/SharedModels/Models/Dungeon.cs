@@ -37,4 +37,14 @@ public class Dungeon
     /// Date de génération du donjon
     /// </summary>
     public DateTime GeneratedAt { get; set; } = DateTime.UtcNow;
+    
+    /// <summary>
+    /// Salles de ce donjon
+    /// </summary>
+    public virtual ICollection<Room> Rooms { get; set; } = new List<Room>();
+    
+    /// <summary>
+    /// Sessions de jeu utilisant ce donjon
+    /// </summary>
+    public virtual ICollection<GameSession> GameSessions { get; set; } = new List<GameSession>();
 }

@@ -37,4 +37,9 @@ public class Administrator
     /// Date de création du compte admin
     /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    
+    /// <summary>
+    /// Utilisateur associé à cet administrateur
+    /// </summary>
+    public virtual User? User { get; set; }
 }

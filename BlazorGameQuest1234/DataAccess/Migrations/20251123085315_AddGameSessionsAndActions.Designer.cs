@@ -3,6 +3,7 @@ using System;
 using DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(GameDbContext))]
-    partial class GameDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251123085315_AddGameSessionsAndActions")]
+    partial class AddGameSessionsAndActions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -47,8 +50,7 @@ namespace DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId")
-                        .IsUnique();
+                    b.HasIndex("UserId");
 
                     b.ToTable("Administrators");
                 });
@@ -138,14 +140,8 @@ namespace DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AttackDamage")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("CurrentHP")
-                        .HasColumnType("integer");
 
                     b.Property<int>("CurrentRoomNumber")
                         .HasColumnType("integer");
@@ -153,19 +149,7 @@ namespace DataAccess.Migrations
                     b.Property<int>("CurrentScore")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Defense")
-                        .HasColumnType("integer");
-
                     b.Property<int>("DungeonId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ExperiencePoints")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("MaxHP")
                         .HasColumnType("integer");
 
                     b.Property<int>("PlayerId")
@@ -177,9 +161,6 @@ namespace DataAccess.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<int>("TotalScore")
-                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -217,8 +198,7 @@ namespace DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId")
-                        .IsUnique();
+                    b.HasIndex("UserId");
 
                     b.ToTable("Players");
                 });
@@ -273,9 +253,6 @@ namespace DataAccess.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
                     b.HasIndex("DungeonId", "RoomNumber")
@@ -328,13 +305,11 @@ namespace DataAccess.Migrations
 
             modelBuilder.Entity("SharedModels.Models.Administrator", b =>
                 {
-                    b.HasOne("SharedModels.Models.User", "User")
-                        .WithOne("Administrator")
-                        .HasForeignKey("SharedModels.Models.Administrator", "UserId")
+                    b.HasOne("SharedModels.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SharedModels.Models.GameAction", b =>
@@ -377,24 +352,20 @@ namespace DataAccess.Migrations
 
             modelBuilder.Entity("SharedModels.Models.Player", b =>
                 {
-                    b.HasOne("SharedModels.Models.User", "User")
-                        .WithOne("Player")
-                        .HasForeignKey("SharedModels.Models.Player", "UserId")
+                    b.HasOne("SharedModels.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SharedModels.Models.Room", b =>
                 {
-                    b.HasOne("SharedModels.Models.Dungeon", "Dungeon")
+                    b.HasOne("SharedModels.Models.Dungeon", null)
                         .WithMany("Rooms")
                         .HasForeignKey("DungeonId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Dungeon");
                 });
 
             modelBuilder.Entity("SharedModels.Models.Dungeon", b =>
@@ -417,13 +388,6 @@ namespace DataAccess.Migrations
             modelBuilder.Entity("SharedModels.Models.Room", b =>
                 {
                     b.Navigation("Actions");
-                });
-
-            modelBuilder.Entity("SharedModels.Models.User", b =>
-                {
-                    b.Navigation("Administrator");
-
-                    b.Navigation("Player");
                 });
 #pragma warning restore 612, 618
         }
