@@ -15,10 +15,10 @@ builder.RootComponents.Add<App>("#app");        // Composant principal dans l'é
 builder.RootComponents.Add<HeadOutlet>("head::after");  // Gestion des éléments <head>
 
 // Configuration des services DI
-// HttpClient configuré pour communiquer avec l'API GameAPI
+// HttpClient configuré pour communiquer avec l'API via la Gateway
 builder.Services.AddScoped(sp => new HttpClient 
 { 
-    BaseAddress = new Uri("http://localhost:5215/") // URL de l'API
+    BaseAddress = new Uri("http://localhost:5000/") // URL de la Gateway
 });
 
 // Services de jeu
