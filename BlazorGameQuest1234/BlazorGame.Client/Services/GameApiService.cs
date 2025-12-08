@@ -176,4 +176,65 @@ public class GameApiService : IGameApiService
         }
     }
 
+    /// <summary>
+    /// Récupère tous les utilisateurs
+    /// </summary>
+    /// <returns>Liste des utilisateurs</returns>
+    public async Task<List<User>> GetUsersAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetFromJsonAsync<List<User>>("api/users", _jsonOptions);
+            return response ?? new List<User>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la récupération des utilisateurs: {ex.Message}");
+            return new List<User>();
+        }
+    }
+
+    /// <summary>
+    /// Récupère un utilisateur par son ID
+    /// </summary>
+    /// <param name="userId">ID de l'utilisateur</param>
+    /// <returns>L'utilisateur ou null si non trouvé</returns>
+    public async Task<User?> GetUserByIdAsync(int userId)
+    {
+        try
+        {
+            return await _httpClient.GetFromJsonAsync<User>($"api/users/{userId}", _jsonOptions);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la récupération de l'utilisateur {userId}: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Récupère l'historique des sessions de jeu d'un utilisateur
+    /// </summary>
+    /// <param name="userId">ID de l'utilisateur</param>
+    /// <returns>Liste des sessions de jeu</returns>
+    public async Task<List<GameSession>> GetUserGameSessionsAsync(int userId)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"api/players/user/{userId}/sessions");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var sessions = await response.Content.ReadFromJsonAsync<List<GameSession>>(_jsonOptions);
+                return sessions ?? new List<GameSession>();
+            }
+            
+            return new List<GameSession>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la récupération des sessions de l'utilisateur {userId}: {ex.Message}");
+            return new List<GameSession>();
+        }
+    }
 }

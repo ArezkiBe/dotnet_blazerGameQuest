@@ -1,0 +1,267 @@
+@page "/admin"
+@using SharedModels.Models
+@inject UserContextService UserContext
+@inject IGameApiService GameApi
+@inject NavigationManager Navigation
+
+<PageTitle>Tableau de Bord Admin - BlazorGameQuest</PageTitle>
+
+@if (!UserContext.IsAdmin)
+{
+    <div class="access-denied">
+        <h2>🚫 Accès Refusé</h2>
+        <p>Vous devez être administrateur pour accéder à cette page.</p>
+        <button class="btn btn-primary" @onclick='() => Navigation.NavigateTo("/")'>
+            Retour à l'accueil
+        </button>
+    </div>
+}
+else
+{
+    <div class="admin-dashboard">
+        <div class="dashboard-header">
+            <h1>👑 Tableau de Bord Administrateur</h1>
+            <p>Bienvenue @UserContext.CurrentUser?.Username - Gestion de BlazorGameQuest</p>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="loading-container">
+                <div class="loading-spinner">⏳</div>
+                <p>Chargement des statistiques...</p>
+            </div>
+        }
+        else
+        {
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <h3>@totalPlayers</h3>
+                        <p>Joueurs Totaux</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <h3>@activePlayers</h3>
+                        <p>Joueurs Actifs</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">🎮</div>
+                    <div class="stat-info">
+                        <h3>@totalSessions</h3>
+                        <p>Parties Jouées</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">🏆</div>
+                    <div class="stat-info">
+                        <h3>@topScore</h3>
+                        <p>Meilleur Score</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Cards -->
+            <div class="action-grid">
+                <div class="action-card" @onclick='() => Navigation.NavigateTo("/admin/players")'>
+                    <div class="action-icon">👥</div>
+                    <h3>Gestion des Joueurs</h3>
+                    <p>Gérer les comptes joueurs, voir les détails et désactiver les comptes</p>
+                    <div class="action-btn">Accéder →</div>
+                </div>
+
+                <div class="action-card" @onclick='() => Navigation.NavigateTo("/admin/leaderboard")'>
+                    <div class="action-icon">🏆</div>
+                    <h3>Classement Général</h3>
+                    <p>Consulter le classement des joueurs et les statistiques de performance</p>
+                    <div class="action-btn">Voir →</div>
+                </div>
+
+                <div class="action-card" @onclick='() => Navigation.NavigateTo("/admin/export")'>
+                    <div class="action-icon">📊</div>
+                    <h3>Export des Données</h3>
+                    <p>Exporter les données des joueurs et les statistiques de jeu</p>
+                    <div class="action-btn">Exporter →</div>
+                </div>
+            </div>
+
+            <!-- Score Distribution Chart -->
+            @if (recentPlayers.Any())
+            {
+                <div class="chart-section">
+                    <h2>📊 Distribution des Scores</h2>
+                    <div class="score-chart">
+                        @foreach (var range in scoreRanges)
+                        {
+                            var percentage = totalPlayers > 0 ? (range.Count * 100.0 / totalPlayers) : 0;
+                            <div class="score-bar">
+                                <div class="bar-label">@range.Label</div>
+                                <div class="bar-container">
+                                    <div class="bar-fill" style="width: @(percentage)%"></div>
+                                    <div class="bar-value">@range.Count joueurs</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <!-- Recent Activity -->
+                    <div class="recent-activity">
+                        <h2>🕒 Activité Récente</h2>
+                        <div class="recent-list">
+                            @foreach (var player in recentPlayers.Take(5))
+                            {
+                                <div class="recent-item">
+                                    <div class="recent-info">
+                                        <strong>@player.Username</strong>
+                                        <span class="recent-score">Score: @player.Score pts</span>
+                                    </div>
+                                    <div class="recent-date">
+                                        Créé le @player.CreatedAt.ToString("dd/MM/yyyy")
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Top Players Chart -->
+                    <div class="top-players-chart">
+                        <h2>🏆 Top 5 Joueurs</h2>
+                        <div class="players-chart">
+                            @foreach (var (player, index) in recentPlayers.OrderByDescending(p => p.Score).Take(5).Select((p, i) => (p, i)))
+                            {
+                                var percentage = topScore > 0 ? (player.Score * 100.0 / topScore) : 0;
+                                <div class="player-bar">
+                                    <div class="player-name">
+                                        <span class="rank">#@(index + 1)</span>
+                                        @player.Username
+                                    </div>
+                                    <div class="player-score-bar">
+                                        <div class="score-fill" style="width: @(percentage)%"></div>
+                                        <div class="score-text">@player.Score pts</div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+}
+
+@code {
+    private bool isLoading = true;
+    private int totalPlayers = 0;
+    private int activePlayers = 0;
+    private int totalSessions = 0;
+    private int topScore = 0;
+    private List<Player> recentPlayers = new();
+    private List<ScoreRange> scoreRanges = new();
+
+    public class ScoreRange
+    {
+        public string Label { get; set; } = "";
+        public int Count { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Redirect if not admin
+        if (!UserContext.IsAdmin)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            // Load players
+            var players = await GameApi.GetPlayersAsync();
+            var users = await GameApi.GetUsersAsync();
+
+            totalPlayers = players.Count;
+            activePlayers = users.Count(u => u.IsActive && u.Role == UserRole.Player);
+            
+            if (players.Any())
+            {
+                topScore = players.Max(p => p.Score);
+                recentPlayers = players.OrderByDescending(p => p.CreatedAt).ToList();
+                
+                // Calculate score distribution
+                CalculateScoreRanges(players);
+            }
+
+            // For totalSessions, we'll need to count game sessions
+            totalSessions = players.Sum(p => p.GameSessions?.Count ?? 0);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement du dashboard: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void CalculateScoreRanges(List<Player> players)
+    {
+        if (!players.Any()) return;
+
+        var maxScore = players.Max(p => p.Score);
+        var ranges = new List<ScoreRange>();
+        
+        // Define score ranges based on max score
+        var rangeSize = Math.Max(50, maxScore / 5);
+        
+        ranges.Add(new ScoreRange 
+        { 
+            Label = $"0-{rangeSize}", 
+            Count = players.Count(p => p.Score >= 0 && p.Score <= rangeSize) 
+        });
+        
+        ranges.Add(new ScoreRange 
+        { 
+            Label = $"{rangeSize + 1}-{rangeSize * 2}", 
+            Count = players.Count(p => p.Score > rangeSize && p.Score <= rangeSize * 2) 
+        });
+        
+        ranges.Add(new ScoreRange 
+        { 
+            Label = $"{rangeSize * 2 + 1}-{rangeSize * 3}", 
+            Count = players.Count(p => p.Score > rangeSize * 2 && p.Score <= rangeSize * 3) 
+        });
+        
+        ranges.Add(new ScoreRange 
+        { 
+            Label = $"{rangeSize * 3 + 1}-{rangeSize * 4}", 
+            Count = players.Count(p => p.Score > rangeSize * 3 && p.Score <= rangeSize * 4) 
+        });
+        
+        ranges.Add(new ScoreRange 
+        { 
+            Label = $"{rangeSize * 4 + 1}+", 
+            Count = players.Count(p => p.Score > rangeSize * 4) 
+        });
+
+        scoreRanges = ranges.Where(r => r.Count > 0).ToList();
+    }
+}

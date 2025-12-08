@@ -48,6 +48,40 @@
     background: linear-gradient(180deg, #d4af37, #8b4513);
 }
 
+/* ========= SECTION ADMIN ========= */
+.admin-section {
+    border: 2px solid #d4af37;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #4a2c17 0%, #3d2314 100%);
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+}
+
+.admin-section .nav-title {
+    color: #d4af37 !important;
+    text-shadow: 0 0 5px rgba(212, 175, 55, 0.8);
+}
+
+.admin-link {
+    background: linear-gradient(135deg, #5d3a1f 0%, #4a2c17 100%);
+    border: 1px solid #d4af37;
+}
+
+.admin-link:hover,
+.admin-link.active {
+    background: linear-gradient(135deg, #d4af37 0%, #b8941f 100%);
+    color: #2d1b0e !important;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.6);
+}
+
+.admin-link:hover .nav-icon,
+.admin-link.active .nav-icon,
+.admin-link:hover .nav-text,
+.admin-link.active .nav-text {
+    color: #2d1b0e !important;
+}
+
 /* ========= NAVIGATION ========= */
 .game-nav { 
     padding: 1rem 0; 

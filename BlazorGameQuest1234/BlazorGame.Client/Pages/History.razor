@@ -1,0 +1,187 @@
+@page "/history"
+@using SharedModels.Models
+@inject UserContextService UserContext
+@inject IGameApiService GameApi
+@inject NavigationManager Navigation
+
+<PageTitle>Mon Historique - BlazorGameQuest</PageTitle>
+
+@if (!UserContext.IsLoggedIn || UserContext.CurrentUser?.Role != UserRole.Player)
+{
+    <div class="access-denied">
+        <h2>🚫 Accès Refusé</h2>
+        <p>Vous devez être connecté en tant que joueur pour voir votre historique.</p>
+        <button class="btn btn-primary" @onclick='() => Navigation.NavigateTo("/")'>
+            Retour à l'accueil
+        </button>
+    </div>
+}
+else
+{
+    <div class="history-page">
+        <div class="page-header">
+            <h1>📜 Mon Historique de Jeu</h1>
+            <p>Historique complet de vos parties et statistiques personnelles</p>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="loading-container">
+                <div class="loading-spinner">⏳</div>
+                <p>Chargement de votre historique...</p>
+            </div>
+        }
+        else if (playerData != null)
+        {
+            <!-- Player Statistics -->
+            <div class="stats-section">
+                <div class="stat-card">
+                    <div class="stat-icon">🏆</div>
+                    <div class="stat-info">
+                        <h3>@playerData.Score</h3>
+                        <p>Score Total</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">🎮</div>
+                    <div class="stat-info">
+                        <h3>@(gameSessions?.Count ?? 0)</h3>
+                        <p>Parties Jouées</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-info">
+                        <h3>@playerData.CreatedAt.ToString("dd/MM/yyyy")</h3>
+                        <p>Membre Depuis</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Sessions History -->
+            @if (gameSessions != null && gameSessions.Any())
+            {
+                <div class="sessions-section">
+                    <h2>🎯 Historique des Parties</h2>
+                    <div class="sessions-list">
+                        @foreach (var session in gameSessions.OrderByDescending(s => s.StartedAt))
+                        {
+                            <div class="session-card @(session.CompletedAt.HasValue ? "completed" : "active")">
+                                <div class="session-header">
+                                    <div class="session-info">
+                                        <h3>Partie #@session.Id</h3>
+                                        <span class="session-status">
+                                            @if (session.CompletedAt.HasValue)
+                                            {
+                                                <span class="status-completed">✅ Terminée</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="status-active">🔄 En cours</span>
+                                            }
+                                        </span>
+                                    </div>
+                                    <div class="session-score">
+                                        <strong>@session.TotalScore pts</strong>
+                                    </div>
+                                </div>
+                                
+                                <div class="session-details">
+                                    <div class="detail-item">
+                                        <span class="label">Commencée:</span>
+                                        <span class="value">@session.StartedAt.ToString("dd/MM/yyyy à HH:mm")</span>
+                                    </div>
+                                    
+                                    @if (session.CompletedAt.HasValue)
+                                    {
+                                        <div class="detail-item">
+                                            <span class="label">Terminée:</span>
+                                            <span class="value">@session.CompletedAt.Value.ToString("dd/MM/yyyy à HH:mm")</span>
+                                        </div>
+                                        
+                                        <div class="detail-item">
+                                            <span class="label">Durée:</span>
+                                            <span class="value">@((session.CompletedAt.Value - session.StartedAt).TotalMinutes.ToString("F0")) min</span>
+                                        </div>
+                                    }
+                                    
+                                    <div class="detail-item">
+                                        <span class="label">Salle Atteinte:</span>
+                                        <span class="value">Salle @session.CurrentRoomNumber</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="no-sessions">
+                    <div class="empty-state">
+                        <span class="empty-icon">🎮</span>
+                        <h3>Aucune partie jouée</h3>
+                        <p>Commencez votre première aventure pour voir votre historique ici!</p>
+                        <button class="btn btn-primary" @onclick='() => Navigation.NavigateTo("/adventure")'>
+                            🚀 Commencer une Aventure
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="error-message">
+                <h3>❌ Erreur</h3>
+                <p>Impossible de charger votre profil joueur.</p>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private bool isLoading = true;
+    private Player? playerData;
+    private List<GameSession>? gameSessions;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!UserContext.IsLoggedIn || UserContext.CurrentUser?.Role != UserRole.Player)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        await LoadPlayerHistory();
+    }
+
+    private async Task LoadPlayerHistory()
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            // Get player data by user ID
+            var players = await GameApi.GetPlayersAsync();
+            playerData = players.FirstOrDefault(p => p.UserId == UserContext.CurrentUser?.Id);
+
+            if (playerData != null)
+            {
+                // Get real game sessions from the API
+                gameSessions = await GameApi.GetUserGameSessionsAsync(UserContext.CurrentUser!.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement de l'historique: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+}

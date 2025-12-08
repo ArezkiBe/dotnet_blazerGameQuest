@@ -24,5 +24,8 @@ builder.Services.AddScoped(sp => new HttpClient
 // Services de jeu
 builder.Services.AddScoped<IGameApiService, GameApiService>();
 
+// Service temporaire de gestion des utilisateurs (version 4)
+builder.Services.AddScoped<UserContextService>();
+
 // Démarrage de l'application Blazor WebAssembly
 await builder.Build().RunAsync();

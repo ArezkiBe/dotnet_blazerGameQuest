@@ -1,0 +1,302 @@
+@page "/admin/leaderboard"
+@using SharedModels.Models
+@inject UserContextService UserContext
+@inject IGameApiService GameApi
+@inject NavigationManager Navigation
+
+<PageTitle>Classement Général - BlazorGameQuest Admin</PageTitle>
+
+@if (!UserContext.IsAdmin)
+{
+    <div class="access-denied">
+        <h2>🚫 Accès Refusé</h2>
+        <p>Vous devez être administrateur pour accéder à cette page.</p>
+        <button class="btn btn-primary" @onclick='() => Navigation.NavigateTo("/")'>
+            Retour à l'accueil
+        </button>
+    </div>
+}
+else
+{
+    <div class="leaderboard">
+        <div class="page-header">
+            <h1>🏆 Classement Général</h1>
+            <button class="back-btn" @onclick='() => Navigation.NavigateTo("/admin")'>
+                ← Retour au Dashboard
+            </button>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="loading-container">
+                <div class="loading-spinner">⏳</div>
+                <p>Chargement du classement...</p>
+            </div>
+        }
+        else
+        {
+            <!-- Statistics Summary -->
+            <div class="stats-summary">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <h3>@totalPlayers</h3>
+                        <p>Joueurs Total</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">🏆</div>
+                    <div class="stat-info">
+                        <h3>@(topPlayer?.Score ?? 0)</h3>
+                        <p>Meilleur Score</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-info">
+                        <h3>@averageScore</h3>
+                        <p>Score Moyen</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top 3 Podium -->
+            @if (topPlayers.Any())
+            {
+                <div class="podium-section">
+                    <h2>🥇 Podium des Champions</h2>
+                    <div class="podium">
+                        @if (topPlayers.Count >= 2)
+                        {
+                            <!-- Second Place -->
+                            <div class="podium-place second">
+                                <div class="medal">🥈</div>
+                                <div class="player-info">
+                                    <h3>@topPlayers[1].Username</h3>
+                                    <div class="score">@topPlayers[1].Score pts</div>
+                                    <div class="rank">#2</div>
+                                </div>
+                            </div>
+                        }
+                        
+                        @if (topPlayers.Count >= 1)
+                        {
+                            <!-- First Place -->
+                            <div class="podium-place first">
+                                <div class="crown">👑</div>
+                                <div class="medal">🥇</div>
+                                <div class="player-info">
+                                    <h3>@topPlayers[0].Username</h3>
+                                    <div class="score">@topPlayers[0].Score pts</div>
+                                    <div class="rank">#1</div>
+                                </div>
+                            </div>
+                        }
+                        
+                        @if (topPlayers.Count >= 3)
+                        {
+                            <!-- Third Place -->
+                            <div class="podium-place third">
+                                <div class="medal">🥉</div>
+                                <div class="player-info">
+                                    <h3>@topPlayers[2].Username</h3>
+                                    <div class="score">@topPlayers[2].Score pts</div>
+                                    <div class="rank">#3</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Full Leaderboard Table -->
+            <div class="leaderboard-table-section">
+                <h2>📋 Classement Complet</h2>
+                
+                <!-- Filters -->
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>Afficher:</label>
+                        <select @onchange="OnDisplayFilterChanged" value="@displayFilter">
+                            <option value="all">Tous les joueurs</option>
+                            <option value="active">Joueurs actifs seulement</option>
+                            <option value="top10">Top 10</option>
+                            <option value="top20">Top 20</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>🏆 Rang</th>
+                                <th>👤 Joueur</th>
+                                <th>📊 Score</th>
+                                <th>🎮 Parties</th>
+                                <th>📅 Dernière Activité</th>
+                                <th>✅ Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int rank = 1;
+                            }
+                            @foreach (var player in filteredPlayers)
+                            {
+                                var user = users.FirstOrDefault(u => u.Id == player.UserId);
+                                <tr class="player-row @GetRankClass(rank)">
+                                    <td class="rank-cell">
+                                        <span class="rank-number">
+                                            @if (rank <= 3)
+                                            {
+                                                <text>@GetMedalIcon(rank)</text>
+                                            }
+                                            else
+                                            {
+                                                <text>#@rank</text>
+                                            }
+                                        </span>
+                                    </td>
+                                    <td class="player-name">
+                                        <div class="name-container">
+                                            <strong>@player.Username</strong>
+                                            <small>@user?.Email</small>
+                                        </div>
+                                    </td>
+                                    <td class="score-cell">
+                                        <span class="score-badge">@player.Score pts</span>
+                                    </td>
+                                    <td>@(player.GameSessions?.Count ?? 0)</td>
+                                    <td>@player.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        @if (user != null)
+                                        {
+                                            <span class="status-badge @(user.IsActive ? "active" : "inactive")">
+                                                @(user.IsActive ? "✅ Actif" : "❌ Inactif")
+                                            </span>
+                                        }
+                                    </td>
+                                </tr>
+                                rank++;
+                            }
+                        </tbody>
+                    </table>
+
+                    @if (!filteredPlayers.Any())
+                    {
+                        <div class="no-results">
+                            <p>Aucun joueur trouvé avec les critères actuels.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private bool isLoading = true;
+    private List<Player> allPlayers = new();
+    private List<Player> filteredPlayers = new();
+    private List<User> users = new();
+    private List<Player> topPlayers = new();
+    private Player? topPlayer;
+    private int totalPlayers = 0;
+    private int averageScore = 0;
+    private string displayFilter = "all";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!UserContext.IsAdmin)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        await LoadLeaderboardData();
+    }
+
+    private async Task LoadLeaderboardData()
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            allPlayers = await GameApi.GetPlayersAsync();
+            users = await GameApi.GetUsersAsync();
+
+            // Sort players by score descending
+            allPlayers = allPlayers.OrderByDescending(p => p.Score).ToList();
+
+            totalPlayers = allPlayers.Count;
+            averageScore = allPlayers.Any() ? (int)allPlayers.Average(p => p.Score) : 0;
+            topPlayer = allPlayers.FirstOrDefault();
+            topPlayers = allPlayers.Take(3).ToList();
+
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement du classement: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        filteredPlayers = allPlayers.AsEnumerable().ToList();
+
+        switch (displayFilter)
+        {
+            case "active":
+                filteredPlayers = filteredPlayers.Where(p =>
+                {
+                    var user = users.FirstOrDefault(u => u.Id == p.UserId);
+                    return user?.IsActive == true;
+                }).ToList();
+                break;
+            case "top10":
+                filteredPlayers = filteredPlayers.Take(10).ToList();
+                break;
+            case "top20":
+                filteredPlayers = filteredPlayers.Take(20).ToList();
+                break;
+            default:
+                filteredPlayers = filteredPlayers.ToList();
+                break;
+        }
+        StateHasChanged();
+    }
+
+    private void OnDisplayFilterChanged(ChangeEventArgs e)
+    {
+        displayFilter = e.Value?.ToString() ?? "all";
+        ApplyFilters();
+    }
+
+    private string GetRankClass(int rank)
+    {
+        if (rank == 1) return "top1";
+        if (rank <= 3) return "top3";
+        return "";
+    }
+
+    private string GetMedalIcon(int rank)
+    {
+        return rank switch
+        {
+            1 => "🥇",
+            2 => "🥈",
+            3 => "🥉",
+            _ => $"#{rank}"
+        };
+    }
+}

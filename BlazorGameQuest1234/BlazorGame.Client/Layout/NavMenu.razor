@@ -1,4 +1,7 @@
-﻿<div class="game-navbar">
+﻿@using SharedModels.Models
+@inject UserContextService UserContext
+
+<div class="game-navbar">
     <div class="navbar-header">
         <div class="brand-container">
             <span class="brand-icon">⚔️</span>
@@ -14,6 +17,9 @@
 
 <div class="game-sidebar @NavMenuCssClass">
     <nav class="game-nav">
+        <!-- User Selector Component -->
+        <UserSelector />
+        
         <div class="nav-section">
             <h3 class="nav-title">🏠 Navigation</h3>
             <div class="nav-item">
@@ -40,19 +46,66 @@
                     <span class="nav-text">À Propos</span>
                 </NavLink>
             </div>
+            
+            <!-- Player History - Only show for logged-in players -->
+            @if (UserContext.IsLoggedIn && UserContext.CurrentUser?.Role == UserRole.Player)
+            {
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="history">
+                        <span class="nav-icon">📊</span>
+                        <span class="nav-text">Mon Historique</span>
+                    </NavLink>
+                </div>
+            }
         </div>
+        
+        <!-- Admin Section - Only show for administrators -->
+        @if (UserContext.IsAdmin)
+        {
+            <div class="nav-section admin-section">
+                <h3 class="nav-title">👑 Administration</h3>
+                <div class="nav-item">
+                    <NavLink class="nav-link admin-link" href="admin">
+                        <span class="nav-icon">📊</span>
+                        <span class="nav-text">Tableau de Bord</span>
+                    </NavLink>
+                </div>
+                <div class="nav-item">
+                    <NavLink class="nav-link admin-link" href="admin/players">
+                        <span class="nav-icon">👥</span>
+                        <span class="nav-text">Gestion Joueurs</span>
+                    </NavLink>
+                </div>
+                <div class="nav-item">
+                    <NavLink class="nav-link admin-link" href="admin/leaderboard">
+                        <span class="nav-icon">🏆</span>
+                        <span class="nav-text">Classement</span>
+                    </NavLink>
+                </div>
+            </div>
+        }
         
         <div class="nav-section">
             <h3 class="nav-title">🛡️ Jeu</h3>
             <div class="game-stats">
-                <div class="stat-item">
-                    <span class="stat-label">Joueur:</span>
-                    <span class="stat-value">Invité</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Score:</span>
-                    <span class="stat-value">0 pts</span>
-                </div>
+                @if (UserContext.IsLoggedIn)
+                {
+                    <div class="stat-item">
+                        <span class="stat-label">Utilisateur:</span>
+                        <span class="stat-value">@UserContext.CurrentUser?.Username</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Rôle:</span>
+                        <span class="stat-value">@(UserContext.IsAdmin ? "Admin" : "Joueur")</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="stat-item">
+                        <span class="stat-label">Statut:</span>
+                        <span class="stat-value">Non connecté</span>
+                    </div>
+                }
             </div>
         </div>
     </nav>
@@ -71,6 +124,11 @@
     /// <returns>"collapse" si le menu doit être replié, null sinon</returns>
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
+    protected override void OnInitialized()
+    {
+        UserContext.OnUserChanged += StateHasChanged;
+    }
+
     /// <summary>
     /// Basculle l'état d'affichage du menu de navigation
     /// Utilisé par le bouton hamburger sur mobile
@@ -78,5 +136,10 @@
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    public void Dispose()
+    {
+        UserContext.OnUserChanged -= StateHasChanged;
     }
 }

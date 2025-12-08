@@ -1,0 +1,397 @@
+@page "/admin/players"
+@using SharedModels.Models
+@inject UserContextService UserContext
+@inject IGameApiService GameApi
+@inject NavigationManager Navigation
+
+<PageTitle>Gestion des Joueurs - BlazorGameQuest Admin</PageTitle>
+
+@if (!UserContext.IsAdmin)
+{
+    <div class="access-denied">
+        <h2>🚫 Accès Refusé</h2>
+        <p>Vous devez être administrateur pour accéder à cette page.</p>
+        <button class="btn btn-primary" @onclick='() => Navigation.NavigateTo("/")'>
+            Retour à l'accueil
+        </button>
+    </div>
+}
+else
+{
+    <div class="player-management">
+        <div class="page-header">
+            <h1>👥 Gestion des Joueurs</h1>
+            <button class="back-btn" @onclick='() => Navigation.NavigateTo("/admin")'>
+                ← Retour au Dashboard
+            </button>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="loading-container">
+                <div class="loading-spinner">⏳</div>
+                <p>Chargement des joueurs...</p>
+            </div>
+        }
+        else
+        {
+            <!-- Filters -->
+            <div class="filters-section">
+                <div class="filter-group">
+                    <label>Filtrer par statut:</label>
+                    <select @onchange="OnStatusFilterChanged" value="@statusFilter">
+                        <option value="all">Tous les joueurs</option>
+                        <option value="active">Actifs uniquement</option>
+                        <option value="inactive">Inactifs uniquement</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Rechercher:</label>
+                    <input type="text" @bind="searchTerm" @oninput="OnSearchChanged" placeholder="Nom d'utilisateur..." />
+                </div>
+            </div>
+
+            <!-- Players Table -->
+            <div class="players-table-container">
+                <table class="players-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable" @onclick='() => SortBy("username")'>
+                                👤 Utilisateur
+                                @if (currentSortField == "username")
+                                {
+                                    <span class="sort-indicator">@(sortAscending ? "▲" : "▼")</span>
+                                }
+                            </th>
+                            <th class="sortable" @onclick='() => SortBy("email")'>
+                                📧 Email
+                                @if (currentSortField == "email")
+                                {
+                                    <span class="sort-indicator">@(sortAscending ? "▲" : "▼")</span>
+                                }
+                            </th>
+                            <th class="sortable" @onclick='() => SortBy("score")'>
+                                🏆 Score
+                                @if (currentSortField == "score")
+                                {
+                                    <span class="sort-indicator">@(sortAscending ? "▲" : "▼")</span>
+                                }
+                            </th>
+                            <th class="sortable" @onclick='() => SortBy("created")'>
+                                📅 Créé le
+                                @if (currentSortField == "created")
+                                {
+                                    <span class="sort-indicator">@(sortAscending ? "▲" : "▼")</span>
+                                }
+                            </th>
+                            <th class="sortable" @onclick='() => SortBy("status")'>
+                                ✅ Statut
+                                @if (currentSortField == "status")
+                                {
+                                    <span class="sort-indicator">@(sortAscending ? "▲" : "▼")</span>
+                                }
+                            </th>
+                            <th>⚙️ Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var playerInfo in filteredPlayers)
+                        {
+                            <tr class="player-row @(selectedPlayer?.Player.Id == playerInfo.Player.Id ? "selected" : "")">
+                                <td class="player-name" @onclick="() => SelectPlayer(playerInfo)">
+                                    <div class="name-container">
+                                        <strong>@playerInfo.Player.Username</strong>
+                                        <small>ID: @playerInfo.Player.Id</small>
+                                    </div>
+                                </td>
+                                <td>@playerInfo.User.Email</td>
+                                <td class="score-cell">
+                                    <span class="score-badge">@playerInfo.Player.Score pts</span>
+                                </td>
+                                <td>@playerInfo.User.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <span class="status-badge @(playerInfo.User.IsActive ? "active" : "inactive")">
+                                        @(playerInfo.User.IsActive ? "✅ Actif" : "❌ Inactif")
+                                    </span>
+                                </td>
+                                <td class="actions-cell">
+                                    <button class="action-btn info-btn" @onclick="() => ViewPlayerDetails(playerInfo)">
+                                        👁️ Détails
+                                    </button>
+                                    @if (playerInfo.User.IsActive)
+                                    {
+                                        <button class="action-btn danger-btn" @onclick="() => TogglePlayerStatus(playerInfo)">
+                                            🚫 Désactiver
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="action-btn success-btn" @onclick="() => TogglePlayerStatus(playerInfo)">
+                                            ✅ Activer
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                @if (!filteredPlayers.Any())
+                {
+                    <div class="no-results">
+                        <p>Aucun joueur trouvé avec les critères actuels.</p>
+                    </div>
+                }
+            </div>
+
+            <!-- Player Details Modal -->
+            @if (showPlayerDetails && selectedPlayerInfo != null)
+            {
+                <div class="modal-backdrop" @onclick="ClosePlayerDetails">
+                    <div class="modal-content" @onclick:stopPropagation="true">
+                        <div class="modal-header">
+                            <h3>📋 Détails du Joueur</h3>
+                            <button class="close-btn" @onclick="ClosePlayerDetails">✕</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="detail-section">
+                                <h4>👤 Informations Utilisateur</h4>
+                                <div class="detail-grid">
+                                    <div class="detail-item">
+                                        <label>Nom d'utilisateur:</label>
+                                        <span>@selectedPlayerInfo.Player.Username</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label>Email:</label>
+                                        <span>@selectedPlayerInfo.User.Email</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label>Statut:</label>
+                                        <span class="status-badge @(selectedPlayerInfo.User.IsActive ? "active" : "inactive")">
+                                            @(selectedPlayerInfo.User.IsActive ? "✅ Actif" : "❌ Inactif")
+                                        </span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label>Créé le:</label>
+                                        <span>@selectedPlayerInfo.User.CreatedAt.ToString("dd/MM/yyyy à HH:mm")</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="detail-section">
+                                <h4>🎮 Statistiques de Jeu</h4>
+                                <div class="detail-grid">
+                                    <div class="detail-item">
+                                        <label>Score Total:</label>
+                                        <span class="score-badge">@selectedPlayerInfo.Player.Score pts</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label>Salle Actuelle:</label>
+                                        <span>Salle @selectedPlayerInfo.Player.CurrentRoom</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label>Parties Jouées:</label>
+                                        <span>@(selectedPlayerInfo.Player.GameSessions?.Count ?? 0)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" @onclick="ClosePlayerDetails">Fermer</button>
+                            @if (selectedPlayerInfo.User.IsActive)
+                            {
+                                <button class="btn btn-danger" @onclick="() => TogglePlayerStatus(selectedPlayerInfo)">
+                                    🚫 Désactiver le Compte
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-success" @onclick="() => TogglePlayerStatus(selectedPlayerInfo)">
+                                    ✅ Activer le Compte
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+}
+
+@code {
+    private bool isLoading = true;
+    private bool showPlayerDetails = false;
+    private List<PlayerInfo> allPlayers = new();
+    private List<PlayerInfo> filteredPlayers = new();
+    private PlayerInfo? selectedPlayer;
+    private PlayerInfo? selectedPlayerInfo;
+    private string statusFilter = "all";
+    private string searchTerm = "";
+    private string currentSortField = "";
+    private bool sortAscending = true;
+
+    public class PlayerInfo
+    {
+        public Player Player { get; set; } = new();
+        public User User { get; set; } = new();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!UserContext.IsAdmin)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        await LoadPlayers();
+    }
+
+    private async Task LoadPlayers()
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            var players = await GameApi.GetPlayersAsync();
+            var users = await GameApi.GetUsersAsync();
+
+            allPlayers = players.Select(p => new PlayerInfo
+            {
+                Player = p,
+                User = users.First(u => u.Id == p.UserId)
+            }).Where(pi => pi.User.Role == UserRole.Player).ToList();
+
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des joueurs: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void SortBy(string field)
+    {
+        if (currentSortField == field)
+        {
+            sortAscending = !sortAscending;
+        }
+        else
+        {
+            currentSortField = field;
+            sortAscending = true;
+        }
+        
+        ApplyFilters();
+    }
+
+    private void ApplyFilters()
+    {
+        filteredPlayers = allPlayers.AsEnumerable().ToList();
+
+        // Status filter
+        if (statusFilter != "all")
+        {
+            bool isActive = statusFilter == "active";
+            filteredPlayers = filteredPlayers.Where(p => p.User.IsActive == isActive).ToList();
+        }
+
+        // Search filter
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            filteredPlayers = filteredPlayers.Where(p => 
+                p.Player.Username.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                p.User.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+
+        // Apply sorting
+        filteredPlayers = currentSortField switch
+        {
+            "username" => sortAscending 
+                ? filteredPlayers.OrderBy(p => p.Player.Username).ToList()
+                : filteredPlayers.OrderByDescending(p => p.Player.Username).ToList(),
+            "email" => sortAscending 
+                ? filteredPlayers.OrderBy(p => p.User.Email).ToList()
+                : filteredPlayers.OrderByDescending(p => p.User.Email).ToList(),
+            "score" => sortAscending 
+                ? filteredPlayers.OrderBy(p => p.Player.Score).ToList()
+                : filteredPlayers.OrderByDescending(p => p.Player.Score).ToList(),
+            "created" => sortAscending 
+                ? filteredPlayers.OrderBy(p => p.User.CreatedAt).ToList()
+                : filteredPlayers.OrderByDescending(p => p.User.CreatedAt).ToList(),
+            "status" => sortAscending 
+                ? filteredPlayers.OrderBy(p => p.User.IsActive).ToList()
+                : filteredPlayers.OrderByDescending(p => p.User.IsActive).ToList(),
+            _ => filteredPlayers
+        };
+
+        StateHasChanged();
+    }
+
+    private void OnStatusFilterChanged(ChangeEventArgs e)
+    {
+        statusFilter = e.Value?.ToString() ?? "all";
+        ApplyFilters();
+    }
+
+    private void OnSearchChanged(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? "";
+        ApplyFilters();
+    }
+
+    private void SelectPlayer(PlayerInfo playerInfo)
+    {
+        selectedPlayer = selectedPlayer?.Player.Id == playerInfo.Player.Id ? null : playerInfo;
+        StateHasChanged();
+    }
+
+    private void ViewPlayerDetails(PlayerInfo playerInfo)
+    {
+        selectedPlayerInfo = playerInfo;
+        showPlayerDetails = true;
+        StateHasChanged();
+    }
+
+    private void ClosePlayerDetails()
+    {
+        showPlayerDetails = false;
+        selectedPlayerInfo = null;
+        StateHasChanged();
+    }
+
+    private async Task TogglePlayerStatus(PlayerInfo playerInfo)
+    {
+        try
+        {
+            // This will be implemented when we add the API endpoint
+            // For now, we'll just simulate the action
+            Console.WriteLine($"Toggleing status for player {playerInfo.Player.Username}");
+            
+            // TODO: Call API to update user status
+            // await GameApi.UpdateUserStatusAsync(playerInfo.User.Id, !playerInfo.User.IsActive);
+            
+            // For demonstration, toggle locally
+            playerInfo.User.IsActive = !playerInfo.User.IsActive;
+            
+            if (showPlayerDetails)
+            {
+                ClosePlayerDetails();
+            }
+            
+            ApplyFilters();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la modification du statut: {ex.Message}");
+        }
+    }
+}
