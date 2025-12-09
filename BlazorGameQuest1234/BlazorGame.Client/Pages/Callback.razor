@@ -1,10 +1,13 @@
 @page "/callback"
 @using BlazorGame.Client.Services
 @using Microsoft.AspNetCore.Components.Authorization
+@using System.Text.Json
+@using System.Security.Claims
 @inject ITokenService TokenService
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
 @inject HttpClient Http
+@inject IGameApiService GameApi
 
 <div class="callback-container">
     <div class="spinner-border" role="status">
@@ -49,9 +52,34 @@
                 
                 if (!string.IsNullOrEmpty(token))
                 {
-                    // Sauvegarder le token
-                    await TokenService.SetTokenAsync(token);
+                    // VÉRIFICATION CRITIQUE : Vérifier si le compte est actif AVANT de sauvegarder le token
+                    var username = ExtractUsernameFromToken(token);
                     
+                    if (!string.IsNullOrEmpty(username))
+                    {
+                        // Sauvegarder temporairement le token pour pouvoir faire l'appel API
+                        await TokenService.SetTokenAsync(token);
+                        
+                        try
+                        {
+                            var userInfo = await GameApi.GetUserByUsernameAsync(username);
+                            
+                            if (userInfo != null && !userInfo.IsActive)
+                            {
+                                // Compte désactivé : supprimer le token et rediriger
+                                await TokenService.RemoveTokenAsync();
+                                Navigation.NavigateTo("/account-disabled", true);
+                                return;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Erreur lors de la vérification du statut: {ex.Message}");
+                            // En cas d'erreur, on laisse passer (le guard vérifiera après)
+                        }
+                    }
+                    
+                    // Compte actif : continuer normalement
                     // Notifier le changement d'état d'authentification
                     if (AuthStateProvider is CustomAuthStateProvider customProvider)
                     {
@@ -71,6 +99,32 @@
         {
             Navigation.NavigateTo("/login");
         }
+    }
+
+    private string? ExtractUsernameFromToken(string token)
+    {
+        try
+        {
+            var payload = token.Split('.')[1];
+            var jsonBytes = Convert.FromBase64String(PadBase64(payload));
+            var keyValuePairs = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes);
+            
+            if (keyValuePairs != null && keyValuePairs.TryGetValue("preferred_username", out var usernameObj))
+            {
+                return usernameObj.ToString();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de l'extraction du username: {ex.Message}");
+        }
+        
+        return null;
+    }
+    
+    private string PadBase64(string base64)
+    {
+        return base64.PadRight(base64.Length + (4 - base64.Length % 4) % 4, '=');
     }
 
     private async Task<string?> ExchangeCodeForTokenAsync(string code)
@@ -93,7 +147,7 @@
             if (response.IsSuccessStatusCode)
             {
                 var responseContent = await response.Content.ReadAsStringAsync();
-                var tokenResponse = System.Text.Json.JsonSerializer.Deserialize<KeycloakTokenResponse>(responseContent);
+                var tokenResponse = JsonSerializer.Deserialize<KeycloakTokenResponse>(responseContent);
                 return tokenResponse?.access_token;
             }
             

@@ -2,10 +2,28 @@
     Composant racine de l'application BlazorGameQuest
     Gère le routage, la navigation et l'authentification
 *@
+@using BlazorGame.Client.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IGameApiService GameApi
+@inject ITokenService TokenService
+
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
-            <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <Authorizing>
+                    <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+                        <p style="color: #ffd700; font-family: 'Courier New', monospace;">⏳ Vérification...</p>
+                    </div>
+                </Authorizing>
+                <NotAuthorized>
+                    @{
+                        NavManager.NavigateTo("/login", forceLoad: true);
+                    }
+                </NotAuthorized>
+            </AuthorizeRouteView>
             <FocusOnNavigate RouteData="@routeData" Selector="h1" />
         </Found>
         <NotFound>
@@ -16,3 +34,46 @@
         </NotFound>
     </Router>
 </CascadingAuthenticationState>
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Vérifier périodiquement le statut du compte
+        var timer = new System.Threading.Timer(async _ => await CheckAccountStatus(), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
+    }
+
+    private async Task CheckAccountStatus()
+    {
+        try
+        {
+            var currentUrl = NavManager.Uri;
+            if (currentUrl.Contains("/account-disabled") || currentUrl.Contains("/login") || currentUrl.Contains("/callback"))
+            {
+                return;
+            }
+
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                var username = user.FindFirst("preferred_username")?.Value;
+                
+                if (!string.IsNullOrEmpty(username))
+                {
+                    var userInfo = await GameApi.GetUserByUsernameAsync(username);
+                    
+                    if (userInfo != null && !userInfo.IsActive)
+                    {
+                        await TokenService.RemoveTokenAsync();
+                        await InvokeAsync(() =>
+                        {
+                            NavManager.NavigateTo("/account-disabled", forceLoad: true);
+                        });
+                    }
+                }
+            }
+        }
+        catch { }
+    }
+}

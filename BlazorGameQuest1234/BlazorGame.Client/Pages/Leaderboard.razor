@@ -1,34 +1,22 @@
-@page "/admin/leaderboard"
+@page "/leaderboard"
 @using SharedModels.Models
 @using Microsoft.AspNetCore.Components.Authorization
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IGameApiService GameApi
 @inject NavigationManager Navigation
 
-<PageTitle>Classement Général - BlazorGameQuest Admin</PageTitle>
+<PageTitle>Classement Général - BlazorGameQuest</PageTitle>
 
 <AuthorizeView>
     <Authorized>
         @{
             var isAdmin = IsUserAdmin(context.User);
         }
-        @if (!isAdmin)
-{
-    <div class="access-denied">
-        <h2>🚫 Accès Refusé</h2>
-        <p>Vous devez être administrateur pour accéder à cette page.</p>
-        <button class="btn btn-primary" @onclick='() => Navigation.NavigateTo("/")'>
-            Retour à l'accueil
-        </button>
-    </div>
-}
-else
-{
-    <div class="leaderboard">
+        <div class="leaderboard">
         <div class="page-header">
             <h1>🏆 Classement Général</h1>
-            <button class="back-btn" @onclick='() => Navigation.NavigateTo("/admin")'>
-                ← Retour au Dashboard
+            <button class="back-btn" @onclick='() => Navigation.NavigateTo(isAdmin ? "/admin" : "/")'>
+                ← Retour @(isAdmin ? "au Dashboard" : "à l'Accueil")
             </button>
         </div>
 
@@ -218,23 +206,12 @@ else
     {
         if (user == null) return false;
         
-        // Pour le développement, considérons que l'utilisateur "admin" est admin
         var username = user.FindFirst("preferred_username")?.Value ?? "";
-        if (username.ToLower() == "admin") return true;
-        
-        // Vérification des rôles standard
-        return user.IsInRole("admin") || user.IsInRole("administrator");
+        return username.ToLower() == "admin" || user.IsInRole("administrateur");
     }
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        if (!IsUserAdmin(authState.User))
-        {
-            Navigation.NavigateTo("/");
-            return;
-        }
-
         await LoadLeaderboardData();
     }
 

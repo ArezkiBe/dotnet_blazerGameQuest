@@ -1,0 +1,139 @@
+@page "/account-disabled"
+@using BlazorGame.Client.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+
+<PageTitle>Compte Désactivé - BlazorGameQuest</PageTitle>
+
+<div class="disabled-container">
+    <div class="disabled-card">
+        <div class="disabled-icon">🚫</div>
+        <h1>Compte Désactivé</h1>
+        <p class="message">
+            Votre compte a été désactivé par un administrateur.
+        </p>
+        <p class="info">
+            Si vous pensez qu'il s'agit d'une erreur, veuillez contacter un administrateur pour réactiver votre compte.
+        </p>
+        <div class="actions">
+            <button class="btn btn-primary" @onclick="Logout">
+                🔓 Se Déconnecter
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Inject] private ITokenService TokenService { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
+
+    private async Task Logout()
+    {
+        await TokenService.RemoveTokenAsync();
+        Navigation.NavigateTo("/login", forceLoad: true);
+    }
+}
+
+<style>
+    @@keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+    }
+
+    .disabled-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    .disabled-card {
+        background: linear-gradient(135deg, #2d1b0e 0%, #1a1008 100%);
+        border: 4px solid #ef4444;
+        padding: 3rem;
+        max-width: 600px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 
+            inset 2px 2px 0px rgba(239, 68, 68, 0.3),
+            inset -2px -2px 0px rgba(0, 0, 0, 0.8),
+            8px 8px 0px #000,
+            0 0 30px rgba(239, 68, 68, 0.3);
+        color: #ffd700;
+        font-family: 'Courier New', monospace;
+    }
+
+    .disabled-icon {
+        font-size: 5rem;
+        margin-bottom: 1rem;
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    .disabled-card h1 {
+        color: #ef4444;
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    .message {
+        font-size: 1.3rem;
+        color: #ffd700;
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+
+    .info {
+        font-size: 1rem;
+        color: #d4af37;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+
+    .actions {
+        margin-top: 2rem;
+    }
+
+    .btn {
+        padding: 15px 30px;
+        font-size: 1.2rem;
+        border: 3px solid #8b4513;
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-primary {
+        background: linear-gradient(180deg, #ef4444 0%, #b91c1c 100%);
+        color: white;
+        box-shadow: 
+            inset 1px 1px 0px rgba(255, 255, 255, 0.3),
+            inset -1px -1px 0px rgba(0, 0, 0, 0.5),
+            3px 3px 0px #000;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(180deg, #dc2626 0%, #991b1b 100%);
+        transform: translate(-2px, -2px);
+        box-shadow: 
+            inset 1px 1px 0px rgba(255, 255, 255, 0.3),
+            inset -1px -1px 0px rgba(0, 0, 0, 0.5),
+            5px 5px 0px #000;
+    }
+
+    .btn-primary:active {
+        transform: translate(1px, 1px);
+        box-shadow: 
+            inset 1px 1px 0px rgba(0, 0, 0, 0.5),
+            2px 2px 0px #000;
+    }
+</style>

@@ -12,6 +12,12 @@ public class Player
     /// </summary>
     public int UserId { get; set; }
     
+    /// <summary>
+    /// Identifiant Keycloak du joueur (sub claim du JWT)
+    /// Permet de lier le joueur à son compte Keycloak
+    /// </summary>
+    public string KeycloakUserId { get; set; } = string.Empty;
+    
     public string Username { get; set; } = string.Empty;
     
     /// <summary>

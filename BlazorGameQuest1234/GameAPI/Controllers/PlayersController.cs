@@ -79,6 +79,7 @@ public class PlayersController : ControllerBase
     /// <response code="400">Utilisateur invalide</response>
     /// <response code="409">Profil joueur déjà existant pour cet utilisateur</response>
     [HttpPost]
+    [Authorize(Roles = "administrateur")]
     public async Task<ActionResult<Player>> CreatePlayer(Player player)
     {
         // Vérifier que l'utilisateur existe
@@ -92,6 +93,13 @@ public class PlayersController : ControllerBase
             return Conflict("Profil joueur déjà existant");
 
         player.CreatedAt = DateTime.UtcNow;
+        
+        // Si KeycloakUserId n'est pas fourni, laisser vide (sera rempli à la première connexion)
+        if (string.IsNullOrEmpty(player.KeycloakUserId))
+        {
+            player.KeycloakUserId = "";
+        }
+        
         _context.Players.Add(player);
         await _context.SaveChangesAsync();
 
@@ -108,6 +116,7 @@ public class PlayersController : ControllerBase
     /// <response code="400">Données invalides ou ID incohérent</response>
     /// <response code="404">Joueur non trouvé</response>
     [HttpPut("{id}")]
+    [Authorize(Roles = "administrateur")]
     public async Task<IActionResult> UpdatePlayer(int id, Player player)
     {
         if (id != player.Id)
@@ -126,6 +135,7 @@ public class PlayersController : ControllerBase
     /// <response code="204">Joueur supprimé avec succès</response>
     /// <response code="404">Joueur non trouvé</response>
     [HttpDelete("{id}")]
+    [Authorize(Roles = "administrateur")]
     public async Task<IActionResult> DeletePlayer(int id)
     {
         var player = await _context.Players.FindAsync(id);
@@ -166,6 +176,7 @@ public class PlayersController : ControllerBase
     /// </summary>
     /// <returns>Liste détaillée des joueurs avec informations utilisateur</returns>
     [HttpGet("admin/detailed")]
+    [Authorize(Roles = "administrateur")]
     public async Task<ActionResult<IEnumerable<object>>> GetPlayersDetailed()
     {
         var players = await _context.Players
@@ -177,7 +188,7 @@ public class PlayersController : ControllerBase
                 Player = p,
                 User = new
                 {
-                    p.User.Id,
+                    p.User!.Id,
                     p.User.Username,
                     p.User.Email,
                     p.User.IsActive,
@@ -204,7 +215,7 @@ public class PlayersController : ControllerBase
         var totalPlayers = await _context.Players.CountAsync();
         var activePlayers = await _context.Players
             .Include(p => p.User)
-            .CountAsync(p => p.User.IsActive);
+            .CountAsync(p => p.User!.IsActive);
         
         var topScore = await _context.Players.MaxAsync(p => (int?)p.Score) ?? 0;
         var averageScore = await _context.Players.AverageAsync(p => (double?)p.Score) ?? 0;
@@ -253,7 +264,7 @@ public class PlayersController : ControllerBase
 
         if (!includeInactive)
         {
-            query = query.Where(p => p.User.IsActive);
+            query = query.Where(p => p.User!.IsActive);
         }
 
         var players = await query
@@ -262,7 +273,7 @@ public class PlayersController : ControllerBase
             {
                 PlayerId = p.Id,
                 Username = p.Username,
-                Email = p.User.Email,
+                Email = p.User!.Email,
                 Score = p.Score,
                 CurrentRoom = p.CurrentRoom,
                 IsActive = p.User.IsActive,
@@ -361,6 +372,9 @@ public class PlayersController : ControllerBase
             await _context.SaveChangesAsync();
         }
 
+        // Récupérer le KeycloakUserId du JWT (claim 'sub')
+        var keycloakUserId = User.FindFirst("sub")?.Value ?? "";
+        
         // Étape 3: Vérifier si le profil joueur existe
         var player = await _context.Players
             .FirstOrDefaultAsync(p => p.UserId == user.Id);
@@ -372,12 +386,19 @@ public class PlayersController : ControllerBase
             {
                 UserId = user.Id,
                 Username = username,
+                KeycloakUserId = keycloakUserId,
                 Score = 0,
                 CurrentRoom = 1,
                 CreatedAt = DateTime.UtcNow
             };
             
             _context.Players.Add(player);
+            await _context.SaveChangesAsync();
+        }
+        else if (string.IsNullOrEmpty(player.KeycloakUserId) && !string.IsNullOrEmpty(keycloakUserId))
+        {
+            // Mise à jour du KeycloakUserId si manquant (pour les joueurs existants)
+            player.KeycloakUserId = keycloakUserId;
             await _context.SaveChangesAsync();
         }
 

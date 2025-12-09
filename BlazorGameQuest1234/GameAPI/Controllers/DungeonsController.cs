@@ -61,6 +61,7 @@ public class DungeonsController : ControllerBase
     /// <response code="201">Donjon créé avec succès</response>
     /// <response code="400">Données invalides</response>
     [HttpPost]
+    [Authorize(Roles = "administrateur")]
     public async Task<ActionResult<Dungeon>> CreateDungeon(Dungeon dungeon)
     {
         _context.Dungeons.Add(dungeon);
@@ -79,6 +80,7 @@ public class DungeonsController : ControllerBase
     /// <response code="400">Données invalides ou ID incohérent</response>
     /// <response code="404">Donjon non trouvé</response>
     [HttpPut("{id}")]
+    [Authorize(Roles = "administrateur")]
     public async Task<IActionResult> UpdateDungeon(int id, Dungeon dungeon)
     {
         if (id != dungeon.Id)
@@ -97,6 +99,7 @@ public class DungeonsController : ControllerBase
     /// <response code="204">Donjon supprimé avec succès</response>
     /// <response code="404">Donjon non trouvé</response>
     [HttpDelete("{id}")]
+    [Authorize(Roles = "administrateur")]
     public async Task<IActionResult> DeleteDungeon(int id)
     {
         var dungeon = await _context.Dungeons.FindAsync(id);

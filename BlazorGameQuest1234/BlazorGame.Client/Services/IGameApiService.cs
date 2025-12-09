@@ -71,6 +71,13 @@ public interface IGameApiService
     Task<User?> GetUserByIdAsync(int userId);
 
     /// <summary>
+    /// Récupère un utilisateur par son nom d'utilisateur
+    /// </summary>
+    /// <param name="username">Nom d'utilisateur</param>
+    /// <returns>L'utilisateur ou null si non trouvé</returns>
+    Task<User?> GetUserByUsernameAsync(string username);
+
+    /// <summary>
     /// Récupère l'historique des sessions de jeu d'un utilisateur
     /// </summary>
     /// <param name="userId">ID de l'utilisateur</param>

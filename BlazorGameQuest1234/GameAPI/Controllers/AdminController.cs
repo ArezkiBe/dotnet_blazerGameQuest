@@ -25,7 +25,8 @@ public class AdminController : ControllerBase
     }
 
     /// <summary>
-    /// Vérifie si l'utilisateur actuel est admin
+    /// Vérifie si l'utilisateur actuel est administrateur
+    /// Supporte plusieurs variantes de rôles pour compatibilité Keycloak
     /// </summary>
     private bool IsCurrentUserAdmin()
     {
@@ -61,7 +62,7 @@ public class AdminController : ControllerBase
         var averageScore = await _context.Players.AverageAsync(p => (double?)p.Score) ?? 0;
         var totalScore = await _context.Players.SumAsync(p => p.Score);
         
-        // Activité récente (dernières 24h)
+        // Calcul des statistiques d'activité récente
         var yesterday = DateTime.UtcNow.AddDays(-1);
         var recentSessions = await _context.GameSessions
             .Where(gs => gs.StartedAt >= yesterday)
@@ -71,13 +72,13 @@ public class AdminController : ControllerBase
             .Where(u => u.CreatedAt >= yesterday)
             .CountAsync();
 
-        // Top 5 des activités récentes
+        // Récupération des sessions les plus récentes avec durée calculée
         var recentActivity = await _context.GameSessions
             .Include(gs => gs.Player)
             .OrderByDescending(gs => gs.StartedAt)
             .Take(5)
             .Select(gs => new {
-                PlayerName = gs.Player.Username,
+                PlayerName = gs.Player!.Username,
                 Score = gs.TotalScore,
                 StartTime = gs.StartedAt,
                 Duration = gs.CompletedAt.HasValue ? 
@@ -136,7 +137,7 @@ public class AdminController : ControllerBase
         if (!includeInactive)
         {
             userQuery = userQuery.Where(u => u.IsActive);
-            playerQuery = playerQuery.Where(p => p.User.IsActive);
+            playerQuery = playerQuery.Where(p => p.User!.IsActive);
         }
 
         var users = await userQuery
@@ -161,7 +162,7 @@ public class AdminController : ControllerBase
                 p.Username,
                 p.Score,
                 p.CurrentRoom,
-                Email = p.User.Email,
+                Email = p.User!.Email,
                 IsActive = p.User.IsActive,
                 CreatedAt = p.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"),
                 SessionsCount = p.GameSessions.Count,
@@ -176,13 +177,14 @@ public class AdminController : ControllerBase
             .ToListAsync();
 
         var sessions = await _context.GameSessions
-            .Include(gs => gs.Player)
-            .Where(gs => includeInactive || gs.Player.User.IsActive)
+            .Include(gs => gs.Player!)
+                .ThenInclude(p => p.User)
+            .Where(gs => includeInactive || gs.Player!.User!.IsActive)
             .OrderByDescending(gs => gs.StartedAt)
             .Select(gs => new
             {
                 gs.Id,
-                PlayerName = gs.Player.Username,
+                PlayerName = gs.Player!.Username,
                 Score = gs.TotalScore,
                 StartTime = gs.StartedAt.ToString("yyyy-MM-dd HH:mm:ss"),
                 EndTime = gs.CompletedAt.HasValue ? gs.CompletedAt.Value.ToString("yyyy-MM-dd HH:mm:ss") : null,
@@ -216,8 +218,7 @@ public class AdminController : ControllerBase
 
         if (format.ToLower() == "csv")
         {
-            // Pour le CSV, on retourne les données dans un format approprié
-            // Le frontend pourra les convertir en CSV
+            // Format CSV : structure séparée pour faciliter la conversion côté client
             return Ok(new
             {
                 exportData.ExportInfo,

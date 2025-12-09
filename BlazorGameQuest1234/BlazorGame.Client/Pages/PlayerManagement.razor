@@ -277,11 +277,12 @@ else
             var players = await GameApi.GetPlayersAsync();
             var users = await GameApi.GetUsersAsync();
 
+            // Afficher tous les joueurs sans filtrer par rôle
             allPlayers = players.Select(p => new PlayerInfo
             {
                 Player = p,
-                User = users.First(u => u.Id == p.UserId)
-            }).Where(pi => pi.User.Role == UserRole.Player).ToList();
+                User = users.FirstOrDefault(u => u.Id == p.UserId) ?? new User { Username = "Inconnu", Email = "N/A", IsActive = false }
+            }).ToList();
 
             ApplyFilters();
         }

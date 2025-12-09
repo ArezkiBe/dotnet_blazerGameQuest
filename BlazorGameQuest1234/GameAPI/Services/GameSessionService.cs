@@ -268,7 +268,8 @@ public class GameSessionService : IGameSessionService
     }
 
     /// <summary>
-    /// Calcule le résultat d'une action basé sur la salle et le type d'action
+    /// Calcule le résultat d'une action basé sur la salle et le type d'action.
+    /// Chaque type d'action a ses propres taux de succès, récompenses et pénalités.
     /// </summary>
     private ActionResult CalculateActionResult(ActionType actionType, Room room)
     {
@@ -288,13 +289,15 @@ public class GameSessionService : IGameSessionService
 
     private ActionResult CalculateCombatResult(Room room)
     {
+        // Jet de réussite basé sur le taux de succès de la salle (variable selon difficulté)
         var success = _random.Next(1, 101) <= room.CombatSuccessRate;
         if (success)
         {
+            // Victoire : récompense de base + variabilité aléatoire pour le fun
             var bonusPoints = _random.Next(-2, 5);
             var totalPoints = room.CombatReward + bonusPoints;
-            var minorDamage = _random.Next(5, 15); // Même en victoire, on prend quelques dégâts
-            var xpGain = 25; // Combat réussi donne le plus d'XP
+            var minorDamage = _random.Next(5, 15); // Même en victoire, on prend quelques dégâts (réalisme)
+            var xpGain = 25; // Combat réussi = l'action la plus XP
             return new ActionResult(true, totalPoints, minorDamage, xpGain,
                 $"⚔️ Victoire ! Vous vainquez le {room.EncounterType} et gagnez {totalPoints} points ! (-{minorDamage} HP)", 
                 _random.Next(1, 5) == 1 ? "Potion de soin" : null);
@@ -373,8 +376,8 @@ public class GameSessionService : IGameSessionService
 
     private ActionResult CalculateInvestigateResult(Room room)
     {
-        // Investigation très risquée mais potentiellement très récompensante
-        var success = _random.Next(1, 101) <= 40; // Seulement 40% de chance de succès
+        // Investigation : mécanique risk/reward - 40% succès mais grosses récompenses, ou dégâts sévères
+        var success = _random.Next(1, 101) <= 40;
         if (success)
         {
             var bonusPoints = _random.Next(15, 35);
@@ -401,46 +404,44 @@ public class GameSessionService : IGameSessionService
     }
     
     /// <summary>
-    /// Calcule le score final en tenant compte de tous les facteurs de performance
+    /// Calcule le score final avec formule complexe multi-facteurs :
+    /// Score = BaseScore + BonusXP + BonusExploration * DifficultyMultiplier + BonusStatus + BonusLevel
     /// </summary>
     private void CalculateFinalScore(GameSession session)
     {
         var baseScore = session.CurrentScore;
         var bonusScore = 0;
         
-        // Bonus XP : 1 point par XP gagné
+        // Facteur 1 : XP (1 point par XP gagné)
         var xpBonus = session.ExperiencePoints;
         bonusScore += xpBonus;
         
-        // Bonus exploration : 50 points par salle explorée
+        // Facteur 2 : Exploration (50 points par salle)
         var roomsExplored = session.Status == GameStatus.Completed 
             ? session.Dungeon?.TotalRooms ?? session.CurrentRoomNumber
             : session.CurrentRoomNumber - 1;
         var explorationBonus = roomsExplored * 50;
         bonusScore += explorationBonus;
         
-        // Bonus de difficulté : multiplié par le niveau de difficulté du donjon
+        // Facteur 3 : Multiplicateur de difficulté (+20% par niveau)
         var difficultyMultiplier = session.Dungeon?.DifficultyLevel ?? 1;
-        bonusScore = (int)(bonusScore * (1 + difficultyMultiplier * 0.2)); // +20% par niveau de difficulté
+        bonusScore = (int)(bonusScore * (1 + difficultyMultiplier * 0.2));
         
-        // Bonus de statut final
+        // Facteur 4 : Bonus de statut final (philosophy: encourager les tentatives, récompenser la victoire)
         switch (session.Status)
         {
             case GameStatus.Completed:
-                // Bonus de victoire : 500 points + bonus de survie basé sur HP restant
-                bonusScore += 500;
-                var survivalBonus = (int)(session.CurrentHP * 2); // 2 points par HP restant
+                bonusScore += 500; // Bonus victoire fixe
+                var survivalBonus = (int)(session.CurrentHP * 2); // Bonus survie : 2 pts/HP
                 bonusScore += survivalBonus;
                 break;
                 
             case GameStatus.Dead:
-                // Pas de pénalité pour la mort, mais pas de bonus de victoire non plus
-                // On garde les bonus XP et exploration pour encourager les tentatives
+                // Design choice : pas de pénalité pour encourager exploration risquée
                 break;
                 
             case GameStatus.Failed:
-                // Légère pénalité pour abandon volontaire
-                bonusScore = (int)(bonusScore * 0.8); // -20% des bonus
+                bonusScore = (int)(bonusScore * 0.8); // Pénalité abandon : -20%
                 break;
         }
         
@@ -461,19 +462,21 @@ public class GameSessionService : IGameSessionService
     }
 
     /// <summary>
-    /// Vérifie et applique le level up avec bonus de stats
+    /// Vérifie et applique le level up avec bonus de stats.
+    /// Utilise une boucle while pour gérer les level-ups multiples (si beaucoup d'XP d'un coup).
     /// </summary>
     private void CheckLevelUp(GameSession session)
     {
         var requiredXP = GetRequiredXPForLevel(session.Level + 1);
         
+        // Boucle pour gérer plusieurs level-ups consécutifs
         while (session.ExperiencePoints >= requiredXP)
         {
             session.Level++;
             
-            // Bonus de stats par niveau
+            // Stats progression : +10 MaxHP, +10 heal, +5 ATK, +2 DEF par niveau
             session.MaxHP += 10;
-            session.CurrentHP += 10; // Guérit un peu au level up
+            session.CurrentHP += 10; // Effet "guérison" lors du level-up
             session.AttackDamage += 5;
             session.Defense += 2;
             
@@ -483,11 +486,12 @@ public class GameSessionService : IGameSessionService
     }
     
     /// <summary>
-    /// Calcule l'XP requis pour atteindre un niveau donné
+    /// Calcule l'XP requis pour atteindre un niveau donné.
+    /// Formule progressive : f(n) = (n-1)*50 + (n-2)*25
+    /// Exemples : Lvl 1→0 XP, Lvl 2→50 XP, Lvl 3→150 XP, Lvl 4→300 XP (courbe exponentielle)
     /// </summary>
     private int GetRequiredXPForLevel(int level)
     {
-        // Formule progressive : Niveau 1=0, Niveau 2=50, Niveau 3=150, Niveau 4=300, etc.
         return level <= 1 ? 0 : (level - 1) * 50 + (level - 2) * 25;
     }
 

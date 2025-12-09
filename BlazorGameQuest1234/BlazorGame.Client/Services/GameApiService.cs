@@ -34,7 +34,7 @@ public class GameApiService : IGameApiService
         {
             var response = await _httpClient.PostAsync(
                 $"api/game/start-adventure?playerId={playerId}&difficulty={difficulty}", 
-                null);
+                new StringContent(""));
             
             if (response.IsSuccessStatusCode)
             {
@@ -111,7 +111,7 @@ public class GameApiService : IGameApiService
     {
         try
         {
-            var response = await _httpClient.PostAsync($"api/game/session/{sessionId}/next-room", null);
+            var response = await _httpClient.PostAsync($"api/game/session/{sessionId}/next-room", new StringContent(""));
             
             if (response.IsSuccessStatusCode)
             {
@@ -136,7 +136,7 @@ public class GameApiService : IGameApiService
         {
             var response = await _httpClient.PostAsync(
                 $"api/game/session/{sessionId}/end?reason={reason}", 
-                null);
+                new StringContent(""));
             
             if (response.IsSuccessStatusCode)
             {
@@ -208,6 +208,24 @@ public class GameApiService : IGameApiService
         catch (Exception ex)
         {
             Console.WriteLine($"Erreur lors de la récupération de l'utilisateur {userId}: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Récupère un utilisateur par son nom d'utilisateur
+    /// </summary>
+    /// <param name="username">Nom d'utilisateur</param>
+    /// <returns>L'utilisateur ou null si non trouvé</returns>
+    public async Task<User?> GetUserByUsernameAsync(string username)
+    {
+        try
+        {
+            return await _httpClient.GetFromJsonAsync<User>($"api/users/by-username/{username}", _jsonOptions);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la récupération de l'utilisateur {username}: {ex.Message}");
             return null;
         }
     }

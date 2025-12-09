@@ -83,13 +83,14 @@ public class DungeonGeneratorService : IDungeonGeneratorService
     }
 
     /// <summary>
-    /// Génère une salle aléatoire avec des caractéristiques variées
+    /// Génère une salle aléatoire avec des caractéristiques variées.
+    /// La difficulté fluctue autour de baseDifficulty (±1 niveau) pour éviter la monotonie.
     /// </summary>
     public Room GenerateRandomRoom(int dungeonId, int roomNumber, int baseDifficulty)
     {
         var template = _roomTemplates[_random.Next(_roomTemplates.Count)];
         
-        // Calculer la difficulté de la salle (varie autour de la difficulté de base)
+        // Difficulté variable : baseDifficulty ± 1 (clampée entre 1-5)
         var roomDifficulty = Math.Clamp(baseDifficulty + _random.Next(-1, 2), 1, 5);
         
         var room = new Room
@@ -110,23 +111,15 @@ public class DungeonGeneratorService : IDungeonGeneratorService
     }
 
     /// <summary>
-    /// Configure les mécaniques de jeu d'une salle selon sa difficulté
+    /// Configure les mécaniques de jeu d'une salle selon sa difficulté.
+    /// Formules : CombatSuccess = max(30, 90-10*diff), CombatReward = 10+5*diff
     /// </summary>
     private void ConfigureRoomMechanics(Room room, int difficulty)
     {
-        // Taux de réussite du combat (plus dur = moins de chance)
-        room.CombatSuccessRate = Math.Max(30, 90 - (difficulty * 10));
-        
-        // Récompenses du combat (plus dur = plus de points)
-        room.CombatReward = 10 + (difficulty * 5);
-        
-        // Récompense de fuite (toujours faible)
-        room.FleeReward = 3 + difficulty;
-        
-        // Taux de réussite de fouille (aléatoire avec légère variation)
-        room.SearchSuccessRate = 40 + _random.Next(-10, 21);
-        
-        // Récompenses/pénalités de fouille
+        room.CombatSuccessRate = Math.Max(30, 90 - (difficulty * 10)); // 80%→30% selon diff
+        room.CombatReward = 10 + (difficulty * 5); // 15→35 pts
+        room.FleeReward = 3 + difficulty; // 4→8 pts (toujours faible)
+        room.SearchSuccessRate = 40 + _random.Next(-10, 21); // 30%→60% (variabilité aléatoire)
         room.SearchReward = 8 + (difficulty * 2) + _random.Next(-3, 4);
         room.SearchPenalty = -(2 + difficulty + _random.Next(-1, 3));
     }

@@ -30,25 +30,26 @@ public class UsersController : ControllerBase
     private bool IsCurrentUserAdmin()
     {
         var username = User.FindFirst("preferred_username")?.Value ?? "";
-        return username.ToLower() == "admin" || User.IsInRole("admin") || User.IsInRole("administrator");
+        return username.ToLower() == "admin" || User.IsInRole("administrateur");
     }
 
     /// <summary>
-    /// Récupère tous les utilisateurs actifs
+    /// Récupère tous les utilisateurs (actifs et inactifs)
     /// </summary>
-    /// <returns>Liste des utilisateurs actifs</returns>
+    /// <returns>Liste de tous les utilisateurs</returns>
     /// <response code="200">Retourne la liste des utilisateurs</response>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<User>>> GetUsers()
     {
+        // Vérification admin manuelle car nécessaire pour PlayerManagement
         if (!IsCurrentUserAdmin())
         {
-            return Forbid("Accès réservé aux administrateurs");
+            return Forbid();
         }
 
+        // Retourner TOUS les utilisateurs (actifs et inactifs) pour la gestion
         var users = await _context.Users
-            .Where(u => u.IsActive)
             .OrderBy(u => u.Username)
             .ToListAsync();
         
@@ -72,13 +73,13 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Récupère un utilisateur par son nom d'utilisateur
+    /// Récupère un utilisateur par son nom d'utilisateur (actif ou inactif)
     /// </summary>
     [HttpGet("by-username/{username}")]
     public async Task<ActionResult<User>> GetUserByUsername(string username)
     {
         var user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Username == username && u.IsActive);
+            .FirstOrDefaultAsync(u => u.Username == username);
         
         return user == null ? NotFound() : Ok(user);
     }
@@ -91,6 +92,7 @@ public class UsersController : ControllerBase
     /// <response code="201">Utilisateur créé avec succès</response>
     /// <response code="409">Nom d'utilisateur ou email déjà utilisé</response>
     [HttpPost]
+    [Authorize(Roles = "administrateur")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<User>> CreateUser(User user)
@@ -115,6 +117,7 @@ public class UsersController : ControllerBase
     /// Met à jour un utilisateur existant
     /// </summary>
     [HttpPut("{id}")]
+    [Authorize(Roles = "administrateur")]
     public async Task<IActionResult> UpdateUser(int id, User user)
     {
         if (id != user.Id)
@@ -144,6 +147,7 @@ public class UsersController : ControllerBase
     /// Supprime un utilisateur (suppression logique)
     /// </summary>
     [HttpDelete("{id}")]
+    [Authorize(Roles = "administrateur")]
     public async Task<IActionResult> DeleteUser(int id)
     {
         var user = await _context.Users.FindAsync(id);
@@ -181,9 +185,10 @@ public class UsersController : ControllerBase
     [HttpPut("{id}/status")]
     public async Task<IActionResult> UpdateUserStatus(int id, [FromBody] bool isActive)
     {
+        // Vérification admin manuelle
         if (!IsCurrentUserAdmin())
         {
-            return Forbid("Accès réservé aux administrateurs");
+            return Forbid();
         }
 
         var user = await _context.Users.FindAsync(id);
@@ -227,13 +232,9 @@ public class UsersController : ControllerBase
     /// Récupère les statistiques détaillées pour le dashboard admin
     /// </summary>
     [HttpGet("dashboard-stats")]
+    [Authorize(Roles = "administrateur")]
     public async Task<ActionResult<object>> GetDashboardStatistics()
     {
-        if (!IsCurrentUserAdmin())
-        {
-            return Forbid("Accès réservé aux administrateurs");
-        }
-
         var totalUsers = await _context.Users.CountAsync();
         var activeUsers = await _context.Users.CountAsync(u => u.IsActive);
         var totalPlayers = await _context.Players.CountAsync();
@@ -250,7 +251,7 @@ public class UsersController : ControllerBase
             .Take(5)
             .Include(gs => gs.Player)
             .Select(gs => new {
-                PlayerName = gs.Player.Username,
+                PlayerName = gs.Player!.Username,
                 Score = gs.TotalScore,
                 Date = gs.StartedAt,
                 Duration = gs.CompletedAt.HasValue ? 

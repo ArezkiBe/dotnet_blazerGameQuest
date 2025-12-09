@@ -70,11 +70,6 @@
                     <button class="btn medieval-btn-normal" @onclick="@(() => StartNewAdventure(2))" disabled="@gameState.IsLoading">🛡️ Normal</button>
                     <button class="btn medieval-btn-hard" @onclick="@(() => StartNewAdventure(3))" disabled="@gameState.IsLoading">🔥 Difficile</button>
                 </div>
-                <div class="mt-3">
-                    <button class="medieval-btn-action" @onclick="ChangePlayer">
-                        👤 Changer de Joueur
-                    </button>
-                </div>
             </div>
         </div>
     }
@@ -484,9 +479,6 @@
             <div class="game-actions">
                 <button class="medieval-btn-secondary" @onclick="StartNewGame">
                     🆕 Nouvelle Aventure
-                </button>
-                <button class="medieval-btn-action" @onclick="ChangePlayer">
-                    👤 Changer de Joueur
                 </button>
             </div>
         </div>
