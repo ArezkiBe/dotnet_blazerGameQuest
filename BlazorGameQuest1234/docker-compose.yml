@@ -1,0 +1,71 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:21.1.1
+    container_name: blazor_keycloak
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KEYCLOAK_FRONTEND_URL=http://localhost:8180
+      - KC_HOSTNAME=localhost
+      - KC_HOSTNAME_PORT=8180
+      - KC_HOSTNAME_STRICT_BACKCHANNEL=false
+      - KC_HTTP_ENABLED=true
+      - KC_HOSTNAME_STRICT_HTTPS=false
+      - KC_HEALTH_ENABLED=true
+    command: start-dev
+    ports:
+      - "8180:8080"
+    restart: always
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    networks:
+      - appnet
+
+  gameapi:
+    build:
+      context: .
+      dockerfile: GameAPI/Dockerfile
+    container_name: blazor_gameapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5001
+      - Keycloak__Authority=http://keycloak:8080/realms/blazor-gamequest
+      - Keycloak__BaseUrl=http://keycloak:8080
+    # Pas de ports exposés publiquement - accès uniquement via Gateway
+    depends_on:
+      - keycloak
+    networks:
+      - appnet
+
+  apigateway:
+    build:
+      context: .
+      dockerfile: ApiGateway/Dockerfile
+    container_name: blazor_gateway
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+      - ReverseProxy__Clusters__gameapi-cluster__Destinations__destination1__Address=http://gameapi:5001
+    ports:
+      - "5000:5000"
+    depends_on:
+      - gameapi
+    networks:
+      - appnet
+
+  blazor-client:
+    build:
+      context: .
+      dockerfile: BlazorGame.Client/Dockerfile
+    container_name: blazor_client
+    depends_on:
+      - apigateway
+    networks:
+      - appnet
+
+volumes:
+  keycloak_data:
+
+networks:
+  appnet:
+    driver: bridge

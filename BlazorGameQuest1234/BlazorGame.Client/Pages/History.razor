@@ -1,23 +1,30 @@
 @page "/history"
 @using SharedModels.Models
-@inject UserContextService UserContext
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
 @inject IGameApiService GameApi
 @inject NavigationManager Navigation
+@inject IAuthorizationService AuthService
 
 <PageTitle>Mon Historique - BlazorGameQuest</PageTitle>
 
-@if (!UserContext.IsLoggedIn || UserContext.CurrentUser?.Role != UserRole.Player)
-{
-    <div class="access-denied">
-        <h2>🚫 Accès Refusé</h2>
-        <p>Vous devez être connecté en tant que joueur pour voir votre historique.</p>
-        <button class="btn btn-primary" @onclick='() => Navigation.NavigateTo("/")'>
-            Retour à l'accueil
-        </button>
-    </div>
-}
-else
-{
+<AuthorizeView>
+    <Authorized>
+        @{
+            var isPlayer = AuthService.IsPlayer(context.User);
+        }
+        @if (!isPlayer)
+        {
+            <div class="access-denied">
+                <h2>🚫 Accès Refusé</h2>
+                <p>Cette page est réservée aux joueurs. Les administrateurs n'ont pas accès à l'historique de jeu.</p>
+                <button class="btn btn-primary" @onclick='() => Navigation.NavigateTo("/")'>
+                    Retour à l'accueil
+                </button>
+            </div>
+        }
+        else
+        {
     <div class="history-page">
         <div class="page-header">
             <h1>📜 Mon Historique de Jeu</h1>
@@ -145,10 +152,25 @@ else
     private bool isLoading = true;
     private Player? playerData;
     private List<GameSession>? gameSessions;
+    private string? currentUserId;
+
+    private string? GetCurrentUserId(System.Security.Claims.ClaimsPrincipal? user)
+    {
+        // Priorité au username plutôt qu'au GUID pour compatibilité avec l'API
+        return user?.FindFirst("preferred_username")?.Value ?? user?.FindFirst("sub")?.Value;
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        if (!UserContext.IsLoggedIn || UserContext.CurrentUser?.Role != UserRole.Player)
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (!AuthService.IsPlayer(authState.User))
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        currentUserId = GetCurrentUserId(authState.User);
+        if (string.IsNullOrEmpty(currentUserId))
         {
             Navigation.NavigateTo("/");
             return;
@@ -164,15 +186,14 @@ else
             isLoading = true;
             StateHasChanged();
 
-            // Get player data by user ID
-            var players = await GameApi.GetPlayersAsync();
-            playerData = players.FirstOrDefault(p => p.UserId == UserContext.CurrentUser?.Id);
+            if (string.IsNullOrEmpty(currentUserId))
+                return;
 
-            if (playerData != null)
-            {
-                // Get real game sessions from the API
-                gameSessions = await GameApi.GetUserGameSessionsAsync(UserContext.CurrentUser!.Id);
-            }
+            // Récupération simplifiée des données du joueur
+            var (player, sessions) = await GameApi.GetPlayerByUsernameAsync(currentUserId);
+            
+            playerData = player;
+            gameSessions = sessions;
         }
         catch (Exception ex)
         {
@@ -184,4 +205,262 @@ else
             StateHasChanged();
         }
     }
+        }
+    </Authorized>
+    <NotAuthorized>
+        <div class="access-denied">
+            <h2>🚫 Accès Refusé</h2>
+            <p>Vous devez être connecté pour accéder à cette page.</p>
+            <a href="/login" class="btn btn-primary">Se connecter</a>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+<style>
+.history-page {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    min-height: 100vh;
+    color: white;
 }
+
+.page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    color: #1a1a2e;
+    border-radius: 12px;
+}
+
+.page-header h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2rem;
+}
+
+.page-header p {
+    margin: 0;
+    opacity: 0.8;
+}
+
+.loading-container {
+    text-align: center;
+    padding: 3rem;
+}
+
+.loading-spinner {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.stats-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+    border: 2px solid #ffd700;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+}
+
+.stat-info h3 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: #ffd700;
+}
+
+.stat-info p {
+    margin: 0.25rem 0 0 0;
+    opacity: 0.8;
+}
+
+.sessions-section {
+    margin-top: 2rem;
+}
+
+.sessions-section h2 {
+    color: #ffd700;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.sessions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.session-card {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+    border: 2px solid #4a5568;
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.session-card.completed {
+    border-color: #48bb78;
+}
+
+.session-card.active {
+    border-color: #ffd700;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+.session-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.session-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.session-info h3 {
+    margin: 0;
+    color: #ffd700;
+}
+
+.session-status {
+    margin-top: 0.5rem;
+}
+
+.status-completed {
+    color: #48bb78;
+    font-weight: bold;
+}
+
+.status-active {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.session-score {
+    font-size: 1.2rem;
+    color: #ffd700;
+}
+
+.session-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+}
+
+.detail-item .label {
+    font-weight: bold;
+    opacity: 0.8;
+}
+
+.detail-item .value {
+    color: #ffd700;
+}
+
+.no-sessions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+    border: 2px dashed #4a5568;
+    border-radius: 12px;
+    max-width: 400px;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.empty-state h3 {
+    color: #ffd700;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    margin-bottom: 1.5rem;
+    opacity: 0.8;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    color: #1a1a2e;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+}
+
+.error-message {
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+    border-radius: 12px;
+    margin: 2rem auto;
+    max-width: 400px;
+}
+
+.error-message h3 {
+    margin: 0 0 1rem 0;
+}
+
+.access-denied {
+    text-align: center;
+    padding: 3rem;
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+    border: 2px solid #e53e3e;
+    border-radius: 12px;
+    margin: 2rem auto;
+    max-width: 500px;
+}
+
+.access-denied h2 {
+    color: #e53e3e;
+    margin-bottom: 1rem;
+}
+</style>

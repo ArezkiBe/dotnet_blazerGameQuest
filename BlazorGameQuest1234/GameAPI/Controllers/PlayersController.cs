@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DataAccess.Data;
 using SharedModels.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GameAPI.Controllers;
 
@@ -11,6 +12,7 @@ namespace GameAPI.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Tags("Players")]
+[Authorize] // Utilisateurs authentifiés
 public class PlayersController : ControllerBase
 {
     private readonly GameDbContext _context;
@@ -328,5 +330,63 @@ public class PlayersController : ControllerBase
             .ToListAsync();
 
         return Ok(sessions);
+    }
+
+    /// <summary>
+    /// Récupère les données du joueur par nom d'utilisateur
+    /// </summary>
+    /// <param name="username">Nom d'utilisateur</param>
+    /// <returns>Données du joueur avec ses sessions</returns>
+    [HttpGet("by-username/{username}")]
+    public async Task<ActionResult<object>> GetPlayerByUsername(string username)
+    {
+        // Étape 1: Vérifier si l'utilisateur existe dans la base locale
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Username == username);
+            
+        // Étape 2: Si l'utilisateur n'existe pas localement, le créer automatiquement
+        if (user == null)
+        {
+            // Créer un nouvel utilisateur joueur par défaut
+            user = new User
+            {
+                Username = username,
+                Email = $"{username}@keycloak.local", // Email par défaut
+                Role = UserRole.Player,
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true
+            };
+            
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+        }
+
+        // Étape 3: Vérifier si le profil joueur existe
+        var player = await _context.Players
+            .FirstOrDefaultAsync(p => p.UserId == user.Id);
+            
+        // Étape 4: Si le profil joueur n'existe pas, le créer automatiquement
+        if (player == null)
+        {
+            player = new Player
+            {
+                UserId = user.Id,
+                Username = username,
+                Score = 0,
+                CurrentRoom = 1,
+                CreatedAt = DateTime.UtcNow
+            };
+            
+            _context.Players.Add(player);
+            await _context.SaveChangesAsync();
+        }
+
+        // Étape 5: Récupérer les sessions de jeu
+        var sessions = await _context.GameSessions
+            .Where(gs => gs.PlayerId == player.Id)
+            .OrderByDescending(gs => gs.StartedAt)
+            .ToListAsync();
+
+        return Ok(new { Player = player, Sessions = sessions });
     }
 }

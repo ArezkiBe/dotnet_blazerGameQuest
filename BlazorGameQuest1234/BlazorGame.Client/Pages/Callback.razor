@@ -1,0 +1,125 @@
+@page "/callback"
+@using BlazorGame.Client.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject ITokenService TokenService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@inject HttpClient Http
+
+<div class="callback-container">
+    <div class="spinner-border" role="status">
+        <span class="visually-hidden">Connexion en cours...</span>
+    </div>
+    <p>Connexion en cours...</p>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var uri = new Uri(Navigation.Uri);
+            var queryString = uri.Query;
+            
+            // Parsing manuel simple des query parameters
+            string? code = null;
+            string? sessionState = null;
+            
+            if (queryString.StartsWith("?"))
+            {
+                var pairs = queryString.Substring(1).Split('&');
+                foreach (var pair in pairs)
+                {
+                    var keyValue = pair.Split('=');
+                    if (keyValue.Length == 2)
+                    {
+                        var key = Uri.UnescapeDataString(keyValue[0]);
+                        var value = Uri.UnescapeDataString(keyValue[1]);
+                        
+                        if (key == "code") code = value;
+                        else if (key == "session_state") sessionState = value;
+                    }
+                }
+            }
+
+            if (!string.IsNullOrEmpty(code))
+            {
+                // Échanger le code d'autorisation contre un token
+                var token = await ExchangeCodeForTokenAsync(code);
+                
+                if (!string.IsNullOrEmpty(token))
+                {
+                    // Sauvegarder le token
+                    await TokenService.SetTokenAsync(token);
+                    
+                    // Notifier le changement d'état d'authentification
+                    if (AuthStateProvider is CustomAuthStateProvider customProvider)
+                    {
+                        customProvider.NotifyUserAuthentication(token);
+                    }
+                    
+                    // Rediriger vers la page d'accueil
+                    Navigation.NavigateTo("/", true);
+                    return;
+                }
+            }
+
+            // Si pas de code ou échec d'échange, rediriger vers login
+            Navigation.NavigateTo("/login");
+        }
+        catch (Exception)
+        {
+            Navigation.NavigateTo("/login");
+        }
+    }
+
+    private async Task<string?> ExchangeCodeForTokenAsync(string code)
+    {
+        try
+        {
+            var tokenEndpoint = "http://localhost:8180/realms/blazor-gamequest/protocol/openid-connect/token";
+            
+            var formParams = new List<KeyValuePair<string, string>>
+            {
+                new("grant_type", "authorization_code"),
+                new("client_id", "blazor-client"),
+                new("code", code),
+                new("redirect_uri", "http://localhost:5000/callback")
+            };
+            
+            var formContent = new FormUrlEncodedContent(formParams);
+            var response = await Http.PostAsync(tokenEndpoint, formContent);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var tokenResponse = System.Text.Json.JsonSerializer.Deserialize<KeycloakTokenResponse>(responseContent);
+                return tokenResponse?.access_token;
+            }
+            
+            return null;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+    
+    public class KeycloakTokenResponse
+    {
+        public string? access_token { get; set; }
+        public string? refresh_token { get; set; }
+        public int expires_in { get; set; }
+        public string? token_type { get; set; }
+    }
+}
+
+<style>
+    .callback-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+</style>

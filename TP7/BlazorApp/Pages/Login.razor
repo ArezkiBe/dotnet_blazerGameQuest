@@ -1,0 +1,79 @@
+@page "/login"
+
+@attribute [AllowAnonymous]
+
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthProvider
+@inject IJSRuntime JS;
+@inject ITokenService localStorage;
+
+<h3>Connexion</h3>
+
+<EditForm Model="@credentials" OnValidSubmit="@HandleLogin">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label>Nom d'utilisateur:</label>
+        <InputText @bind-Value="credentials.Username" class="form-control" />
+    </div>
+    <div>
+        <label>Mot de passe:</label>
+        <InputText @bind-Value="credentials.Password" type="password" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Se connecter</button>
+</EditForm>
+
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@code {
+    private UserCredentials credentials = new();
+    private string? errorMessage;
+    private async Task HandleLogin()
+    {
+        var response = await Http.PostAsJsonAsync("http://localhost:5051/api/auth/login", credentials);
+        
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
+            var token = result?.AccessToken;
+            Console.WriteLine($"....{result} ");
+            Console.WriteLine($"....{token} ");
+            await localStorage.SetTokenAsync(token);
+            //await JS.InvokeVoidAsync("localStorage.setItem", "access_token", token);
+
+            if (AuthProvider is CustomAuthStateProvider customProvider && token is not null)
+            {
+                customProvider.NotifyUserAuthentication(token);
+            }
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            errorMessage = "Échec de la connexion. Vérifiez vos identifiants.";
+        }
+    }
+
+    public class UserCredentials
+    {
+        public string Username { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+
+    public class LoginResponse
+    {
+        [JsonPropertyName("access_token")]
+        public string? AccessToken { get; set; }
+
+        [JsonPropertyName("expires_in")]
+        public int ExpiresIn { get; set; }
+
+        [JsonPropertyName("refresh_token")]
+        public string? RefreshToken { get; set; }
+    }
+}

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SharedModels.Models;
 using GameAPI.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GameAPI.Controllers;
 
@@ -11,6 +12,7 @@ namespace GameAPI.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Tags("Game")]
+[Authorize] // Tous les utilisateurs authentifiés
 public class GameController : ControllerBase
 {
     private readonly IGameSessionService _gameSessionService;

@@ -52,10 +52,16 @@ public interface IGameApiService
     Task<List<Player>> GetPlayersAsync();
     
     /// <summary>
-    /// Récupère tous les utilisateurs
+    /// Récupère tous les utilisateurs (ADMIN SEULEMENT)
     /// </summary>
     /// <returns>Liste des utilisateurs</returns>
     Task<List<User>> GetUsersAsync();
+    
+    /// <summary>
+    /// Récupère les informations publiques des utilisateurs (pour tous les utilisateurs connectés)
+    /// </summary>
+    /// <returns>Liste des utilisateurs publics</returns>
+    Task<List<User>> GetPublicUsersAsync();
     
     /// <summary>
     /// Récupère un utilisateur par son ID
@@ -70,4 +76,19 @@ public interface IGameApiService
     /// <param name="userId">ID de l'utilisateur</param>
     /// <returns>Liste des sessions de jeu</returns>
     Task<List<GameSession>> GetUserGameSessionsAsync(int userId);
+
+    /// <summary>
+    /// Récupère les données du joueur actuel par nom d'utilisateur
+    /// </summary>
+    /// <param name="username">Nom d'utilisateur</param>
+    /// <returns>Données du joueur avec ses sessions</returns>
+    Task<(Player? Player, List<GameSession> Sessions)> GetPlayerByUsernameAsync(string username);
+
+    /// <summary>
+    /// Met à jour le statut d'activation d'un utilisateur (ADMIN SEULEMENT)
+    /// </summary>
+    /// <param name="userId">ID de l'utilisateur</param>
+    /// <param name="isActive">Nouveau statut d'activation</param>
+    /// <returns>True si la mise à jour a réussi</returns>
+    Task<bool> UpdateUserStatusAsync(int userId, bool isActive);
 }

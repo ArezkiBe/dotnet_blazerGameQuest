@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DataAccess.Data;
 using SharedModels.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GameAPI.Controllers;
 
@@ -11,6 +12,7 @@ namespace GameAPI.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Tags("Dungeons")]
+[Authorize] // Utilisateurs authentifiés
 public class DungeonsController : ControllerBase
 {
     private readonly GameDbContext _context;

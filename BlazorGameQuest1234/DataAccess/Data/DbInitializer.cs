@@ -36,71 +36,11 @@ public static class DbInitializer
         }
 
         // Créer des utilisateurs de test
-        var users = new[]
-        {
-            new User
-            {
-                Email = "admin@blazergamequest.com",
-                Username = "GameAdmin",
-                Role = UserRole.Administrator,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new User
-            {
-                Email = "player1@example.com",
-                Username = "Aventurier1",
-                Role = UserRole.Player,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new User
-            {
-                Email = "player2@example.com",
-                Username = "Exploratrice",
-                Role = UserRole.Player,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            }
-        };
+        // Les utilisateurs sont maintenant gérés par Keycloak
+        // Plus besoin de créer des utilisateurs de test
 
-        await context.Users.AddRangeAsync(users);
-        await context.SaveChangesAsync();
-
-        // Créer des joueurs
-        var players = new[]
-        {
-            new Player
-            {
-                UserId = users[1].Id,
-                Username = users[1].Username,
-                Score = 150,
-                CurrentRoom = 3,
-                CreatedAt = DateTime.UtcNow
-            },
-            new Player
-            {
-                UserId = users[2].Id,
-                Username = users[2].Username,
-                Score = 200,
-                CurrentRoom = 1,
-                CreatedAt = DateTime.UtcNow
-            }
-        };
-
-        await context.Players.AddRangeAsync(players);
-
-        // Créer un administrateur
-        var administrator = new Administrator
-        {
-            UserId = users[0].Id,
-            CanManageUsers = true,
-            CanManageGames = true,
-            CanViewAnalytics = true,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        await context.Administrators.AddAsync(administrator);
+        // Les joueurs sont maintenant créés automatiquement lors de leur première connexion
+        // via PlayersController.GetPlayerByUsername()
 
         // Créer un donjon de test
         var dungeon = new Dungeon

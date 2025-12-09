@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DataAccess.Data;
 using SharedModels.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GameAPI.Controllers;
 
@@ -11,6 +12,7 @@ namespace GameAPI.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Tags("Users")]
+[Authorize] // Utilisateurs authentifiés, vérification admin dans les méthodes
 public class UsersController : ControllerBase
 {
     private readonly GameDbContext _context;
@@ -23,6 +25,15 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
+    /// Vérifie si l'utilisateur actuel est admin
+    /// </summary>
+    private bool IsCurrentUserAdmin()
+    {
+        var username = User.FindFirst("preferred_username")?.Value ?? "";
+        return username.ToLower() == "admin" || User.IsInRole("admin") || User.IsInRole("administrator");
+    }
+
+    /// <summary>
     /// Récupère tous les utilisateurs actifs
     /// </summary>
     /// <returns>Liste des utilisateurs actifs</returns>
@@ -31,6 +42,11 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<User>>> GetUsers()
     {
+        if (!IsCurrentUserAdmin())
+        {
+            return Forbid("Accès réservé aux administrateurs");
+        }
+
         var users = await _context.Users
             .Where(u => u.IsActive)
             .OrderBy(u => u.Username)
@@ -165,6 +181,11 @@ public class UsersController : ControllerBase
     [HttpPut("{id}/status")]
     public async Task<IActionResult> UpdateUserStatus(int id, [FromBody] bool isActive)
     {
+        if (!IsCurrentUserAdmin())
+        {
+            return Forbid("Accès réservé aux administrateurs");
+        }
+
         var user = await _context.Users.FindAsync(id);
         
         if (user == null)
@@ -208,6 +229,11 @@ public class UsersController : ControllerBase
     [HttpGet("dashboard-stats")]
     public async Task<ActionResult<object>> GetDashboardStatistics()
     {
+        if (!IsCurrentUserAdmin())
+        {
+            return Forbid("Accès réservé aux administrateurs");
+        }
+
         var totalUsers = await _context.Users.CountAsync();
         var activeUsers = await _context.Users.CountAsync(u => u.IsActive);
         var totalPlayers = await _context.Players.CountAsync();

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DataAccess.Data;
 using SharedModels.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GameAPI.Controllers;
 
@@ -11,6 +12,7 @@ namespace GameAPI.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Tags("Admin")]
+[Authorize] // Utilisateurs authentifiés, vérification admin dans les méthodes
 public class AdminController : ControllerBase
 {
     private readonly GameDbContext _context;
@@ -23,12 +25,26 @@ public class AdminController : ControllerBase
     }
 
     /// <summary>
+    /// Vérifie si l'utilisateur actuel est admin
+    /// </summary>
+    private bool IsCurrentUserAdmin()
+    {
+        var username = User.FindFirst("preferred_username")?.Value ?? "";
+        return username.ToLower() == "admin" || User.IsInRole("admin") || User.IsInRole("administrator");
+    }
+
+    /// <summary>
     /// Récupère les statistiques globales pour le dashboard administrateur
     /// </summary>
     /// <returns>Statistiques globales du système</returns>
     [HttpGet("dashboard")]
     public async Task<ActionResult<object>> GetDashboardData()
     {
+        if (!IsCurrentUserAdmin())
+        {
+            return Forbid("Accès réservé aux administrateurs");
+        }
+
         var totalUsers = await _context.Users.CountAsync();
         var activeUsers = await _context.Users.CountAsync(u => u.IsActive);
         var totalPlayers = await _context.Players.CountAsync();

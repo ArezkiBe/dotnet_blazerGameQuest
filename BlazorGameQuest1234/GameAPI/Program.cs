@@ -1,10 +1,12 @@
-// <summary>
-// Point d'entrée principal de l'API GameAPI
-// BlazorGameQuest - Service backend REST pour la gestion des parties
-// </summary>
+/// <summary>
+/// Point d'entrée principal de l'API GameAPI
+/// BlazorGameQuest - Service backend REST pour la gestion des parties
+/// </summary>
 using Microsoft.EntityFrameworkCore;
 using DataAccess.Data;
 using GameAPI.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 // Création du builder pour l'application Web API
 var builder = WebApplication.CreateBuilder(args);
@@ -49,6 +51,25 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Configuration de l'authentification JWT avec Keycloak
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        var authority = builder.Configuration["Keycloak:Authority"];
+        options.Authority = authority;
+        options.RequireHttpsMetadata = false; // Pour le développement
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = authority,
+            ValidateAudience = false, // Keycloak gère l'audience
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+builder.Services.AddAuthorization();
+
 // Services métier pour la génération de donjons et la gestion des sessions
 builder.Services.AddScoped<IDungeonGeneratorService, DungeonGeneratorService>();
 builder.Services.AddScoped<IGameSessionService, GameSessionService>();
@@ -82,6 +103,10 @@ var app = builder.Build();
 
 // Configuration CORS - doit être avant UseAuthentication/UseAuthorization
 app.UseCors("AllowBlazorClient");
+
+// Middleware d'authentification et autorisation
+app.UseAuthentication();
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {

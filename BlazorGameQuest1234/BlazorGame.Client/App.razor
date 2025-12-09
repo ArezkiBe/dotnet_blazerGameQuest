@@ -1,16 +1,18 @@
 ﻿@*
     Composant racine de l'application BlazorGameQuest
-    Gère le routage et la navigation entre les pages
+    Gère le routage, la navigation et l'authentification
 *@
-<Router AppAssembly="@typeof(App).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-    </Found>
-    <NotFound>
-        <PageTitle>Page non trouvée</PageTitle>
-        <LayoutView Layout="@typeof(MainLayout)">
-            <p role="alert">Désolé, il n'y a rien à cette adresse.</p>
-        </LayoutView>
-    </NotFound>
-</Router>
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Page non trouvée</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <p role="alert">Désolé, il n'y a rien à cette adresse.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
