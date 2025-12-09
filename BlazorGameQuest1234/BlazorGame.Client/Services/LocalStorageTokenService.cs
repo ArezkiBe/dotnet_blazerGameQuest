@@ -3,7 +3,8 @@ using Microsoft.JSInterop;
 namespace BlazorGame.Client.Services;
 
 /// <summary>
-/// Service de gestion des tokens dans le LocalStorage
+/// Service de gestion des tokens JWT dans le LocalStorage du navigateur
+/// Utilisé pour persister l'authentification Keycloak entre les sessions
 /// </summary>
 public class LocalStorageTokenService : ITokenService
 {
@@ -15,6 +16,10 @@ public class LocalStorageTokenService : ITokenService
         _jsRuntime = jsRuntime;
     }
 
+    /// <summary>
+    /// Récupère le token JWT depuis le localStorage
+    /// </summary>
+    /// <returns>Token JWT ou null si absent</returns>
     public async Task<string?> GetTokenAsync()
     {
         try
@@ -27,11 +32,18 @@ public class LocalStorageTokenService : ITokenService
         }
     }
 
+    /// <summary>
+    /// Enregistre le token JWT dans le localStorage
+    /// </summary>
+    /// <param name="token">Token JWT à enregistrer</param>
     public async Task SetTokenAsync(string token)
     {
         await _jsRuntime.InvokeVoidAsync("localStorage.setItem", TOKEN_KEY, token);
     }
 
+    /// <summary>
+    /// Supprime le token JWT du localStorage (lors de la déconnexion)
+    /// </summary>
     public async Task RemoveTokenAsync()
     {
         await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", TOKEN_KEY);

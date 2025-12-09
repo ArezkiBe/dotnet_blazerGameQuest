@@ -257,30 +257,6 @@ public class GameApiService : IGameApiService
     }
 
     /// <summary>
-    /// Récupère les informations publiques des utilisateurs
-    /// </summary>
-    public async Task<List<User>> GetPublicUsersAsync()
-    {
-        try
-        {
-            var response = await _httpClient.GetAsync("api/users/public");
-            
-            if (response.IsSuccessStatusCode)
-            {
-                var users = await response.Content.ReadFromJsonAsync<List<User>>(_jsonOptions);
-                return users ?? new List<User>();
-            }
-            
-            return new List<User>();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erreur lors de la récupération des utilisateurs publics: {ex.Message}");
-            return new List<User>();
-        }
-    }
-
-    /// <summary>
     /// Récupère les données du joueur actuel par nom d'utilisateur
     /// </summary>
     public async Task<(Player? Player, List<GameSession> Sessions)> GetPlayerByUsernameAsync(string username)
@@ -291,6 +267,8 @@ public class GameApiService : IGameApiService
             
             if (response.IsSuccessStatusCode)
             {
+                // Désérialisation manuelle car l'API retourne un objet avec deux propriétés { player, sessions }
+                // qu'on doit extraire séparément pour retourner un tuple
                 var jsonContent = await response.Content.ReadAsStringAsync();
                 var data = JsonSerializer.Deserialize<JsonElement>(jsonContent);
                 

@@ -50,6 +50,10 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
         }
     }
 
+    /// <summary>
+    /// Parse le payload JWT pour extraire les claims (identité, rôles, etc.)
+    /// Gère spécialement les rôles Keycloak dans realm_access.roles
+    /// </summary>
     private IEnumerable<Claim> ParseClaimsFromJwt(string jwt)
     {
         var payload = jwt.Split('.')[1];
@@ -84,11 +88,19 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
         return claims;
     }
 
+    /// <summary>
+    /// Ajoute le padding nécessaire pour décoder une chaîne Base64
+    /// Le payload JWT n'a pas toujours le padding requis
+    /// </summary>
     private string PadBase64(string base64)
     {
         return base64.PadRight(base64.Length + (4 - base64.Length % 4) % 4, '=');
     }
 
+    /// <summary>
+    /// Notifie les composants qu'un utilisateur s'est authentifié
+    /// Utilisé après le callback Keycloak pour mettre à jour l'état global
+    /// </summary>
     public void NotifyUserAuthentication(string token)
     {
         var claims = ParseClaimsFromJwt(token);
@@ -99,6 +111,10 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
         NotifyAuthenticationStateChanged(authState);
     }
 
+    /// <summary>
+    /// Déconnecte l'utilisateur en supprimant le token local et en redirigeant vers Keycloak
+    /// La redirection vers Keycloak garantit la suppression de la session SSO
+    /// </summary>
     public async Task Logout()
     {
         try

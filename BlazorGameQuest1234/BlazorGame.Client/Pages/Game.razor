@@ -791,7 +791,9 @@
     }
 
     /// <summary>
-    /// Calcule le score actuel en cours de partie
+    /// Calcule le score actuel en cours de partie (version client pour affichage temps réel)
+    /// Formule : (BaseScore + BonusXP + BonusExploration + BonusNiveau) × MultipleDifficulté
+    /// IMPORTANT : Ce calcul côté client est approximatif. Le score officiel est calculé côté serveur.
     /// </summary>
     private (int TotalScore, int BaseScore, int XpBonus, int ExplorationBonus, int LevelBonus, double DifficultyMultiplier) CalculateCurrentScore()
     {
@@ -802,29 +804,29 @@
 
         var session = gameState.CurrentSession;
         
-        // Score de base (score actuel de la session)
+        // Score de base (score actuel de la session calculé par le serveur)
         var baseScore = session.CurrentScore;
         
-        // Bonus XP (1 point par XP)
+        // Bonus XP (1 point par XP gagné)
         var xpBonus = session.ExperiencePoints;
         
         // Bonus d'exploration (50 points par salle explorée)
-        // Si la partie est terminée avec succès, on compte toutes les salles
+        // Si la partie est terminée avec succès, on compte toutes les salles du donjon
         var explorationBonus = session.Status == GameStatus.Completed
-            ? 5 * 50  // 5 salles complètement explorées
-            : (session.CurrentRoomNumber - 1) * 50;
+            ? 5 * 50  // 5 salles complètement explorées = 250 points
+            : (session.CurrentRoomNumber - 1) * 50; // Sinon nombre de salles visitées
         
         // Bonus de niveau (100 points par niveau au-dessus de 1)
         var levelBonus = Math.Max(0, session.Level - 1) * 100;
         
-        // Multiplicateur de difficulté : utilise le niveau de difficulté du donjon
+        // Multiplicateur de difficulté : +20% par niveau de difficulté
         var dungeonDifficulty = session.Dungeon?.DifficultyLevel ?? 1;
-        var difficultyMultiplier = 1.0 + dungeonDifficulty * 0.2; // +20% par niveau de difficulté
+        var difficultyMultiplier = 1.0 + dungeonDifficulty * 0.2; 
         
         // Score total avant multiplicateur
         var scoreBeforeMultiplier = baseScore + xpBonus + explorationBonus + levelBonus;
         
-        // Application du multiplicateur de difficulté
+        // Application du multiplicateur de difficulté (arrondi à l'entier)
         var totalScore = (int)Math.Round(scoreBeforeMultiplier * difficultyMultiplier);
         
         return (totalScore, baseScore, xpBonus, explorationBonus, levelBonus, difficultyMultiplier);

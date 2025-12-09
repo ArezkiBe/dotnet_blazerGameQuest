@@ -88,13 +88,16 @@ builder.Services.AddSwaggerGen(c =>
     });
     
     // Configuration de l'authentification JWT Bearer pour Swagger
+    // IMPORTANT : Utiliser SecuritySchemeType.Http avec Scheme = "bearer" pour que Swagger
+    // envoie correctement le token dans le header "Authorization: Bearer <token>"
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header en utilisant le Bearer scheme. Entrez 'Bearer' suivi d'un espace et de votre token. Exemple: 'Bearer eyJhbGciOi...'",
+        Description = "JWT Authorization header en utilisant le Bearer scheme. Entrez SEULEMENT le token (sans 'Bearer '). Exemple: 'eyJhbGciOi...'",
         Name = "Authorization",
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
     });
 
     c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement

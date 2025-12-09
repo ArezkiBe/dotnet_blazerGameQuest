@@ -1,295 +1,154 @@
-# BlazorGameQuest - Projet .NET
+# 🎮 BlazorGameQuest
 
-**Membres du groupe :** Arezki BEGGAR, Ilyas HADJADJ  
-**EFREI Paris - Cours .NET - Semestre 7**
+**Arezki BEGGAR, Ilyas HADJADJ** - EFREI Paris S7 .NET - 2024
 
-## 📋 Description
+## Description
 
-BlazorGameQuest est un jeu d'aventure Blazor WebAssembly avec API .NET 9. Le joueur explore des donjons générés aléatoirement avec système RPG complet (HP, XP, niveaux) et authentification Keycloak sécurisée.
+Jeu d'aventure RPG en Blazor WebAssembly avec architecture microservices, authentification Keycloak et API Gateway YARP.
 
-## 🏗️ Architecture du Projet
+**Fonctionnalités:** Donjons procéduraux, combats tour par tour, système RPG (HP/Mana/XP), classement, gestion des rôles.
+
+## Architecture
 
 ```
-BlazorGameQuest1234/
-├── BlazorGame.Client/          # Frontend Blazor WebAssembly (port 5003)
-├── GameAPI/                    # API REST backend (port 5001)
-├── ApiGateway/                 # YARP Gateway (port 5000)
-├── SharedModels/               # DTOs et modèles partagés
-├── DataAccess/                 # Entity Framework Core + Migrations
-└── BlazorGameQuest.Tests/      # 35 tests unitaires (xUnit)
+Client (localhost:5000) → ApiGateway (YARP) → GameAPI + BlazorClient
+                                ↓
+                            Keycloak (8180)
+                            PostgreSQL/InMemory
 ```
 
-## 🚀 Évolution du Projet (5 Versions)
+**Composants:**
+- **ApiGateway** (Port 5000 HTTP) - Point d'entrée unique
+- **GameAPI** (Port interne 5001) - API REST + EF Core
+- **BlazorGame.Client** (Port interne 80) - Frontend WebAssembly
+- **Keycloak** (Port 8180) - Authentification OpenID Connect
 
-### Version 1 - Frontend Blazor de Base
-✅ Pages Blazor avec génération aléatoire de donjons  
-✅ Interface utilisateur médiévale responsive  
-✅ Navigation entre pages (Home, About, Game)
-
-### Version 2 - API REST et Intégration
-✅ API REST ASP.NET Core avec endpoints CRUD  
-✅ Modèles de données (Users, Players, Dungeons, Rooms)  
-✅ Intégration Frontend-Backend via HttpClient  
-✅ Documentation Swagger/OpenAPI
-
-### Version 3 - Base de Données et Persistance
-✅ Entity Framework Core avec PostgreSQL/InMemory  
-✅ 6 migrations de base de données appliquées  
-✅ Persistance des scores et statistiques joueurs  
-✅ Système de classement (Leaderboard)
-
-### Version 4 - Tests Unitaires
-✅ 35 tests unitaires avec xUnit  
-✅ Tests des services (DungeonGenerator, GameSession)  
-✅ Tests des contrôleurs (Users, Players, Dungeons, Rooms)  
-✅ Couverture complète des fonctionnalités critiques
-
-### Version 5 - Sécurité et Déploiement ⭐ (Version Actuelle)
-✅ Authentification Keycloak (OpenID Connect + JWT Bearer)  
-✅ Gestion des rôles (`joueur`, `administrateur`)  
-✅ YARP API Gateway pour centraliser les appels  
-✅ Docker et Docker Compose pour déploiement conteneurisé  
-✅ Sécurisation des endpoints admin avec `[Authorize(Roles = "administrateur")]`  
-✅ Lien automatique Keycloak ↔ Base de données (`KeycloakUserId`)
-
-## 🛠️ Technologies Utilisées
-
-- **.NET 9** - Framework principal
-- **Blazor WebAssembly** - Frontend SPA
-- **ASP.NET Core Web API** - Backend REST
-- **Entity Framework Core 9** - ORM
-- **PostgreSQL** - Base de données production
-- **Keycloak 21.1.1** - Authentification/Autorisation
-- **YARP** - API Gateway reverse proxy
-- **Docker & Docker Compose** - Conteneurisation
-- **Swagger/OpenAPI** - Documentation API avec authentification JWT
-- **xUnit** - Tests unitaires
-
-## 🎮 Fonctionnalités du Jeu
-
-- **Génération procédurale** : Donjons de 5 salles avec défis variés
-- **Système RPG complet** : HP, XP, niveaux, force, défense
-- **Actions tactiques** : Combat (⚔️), Fuite (🏃), Fouille (🔍), Repos (💤), Investigation (🔦)
-- **Trois difficultés** : Facile, Normal, Difficile
-- **Calcul de score** : Points basés sur performance, difficulté, survie
-- **Classement global** : Top joueurs accessible à tous les utilisateurs authentifiés
-- **Dashboard admin** : Gestion des joueurs, statistiques, exports
-
-## 🐳 Déploiement avec Docker (Recommandé)
+## 🚀 Démarrage Rapide
 
 ### Prérequis
-- Docker Desktop installé
-- .NET 9 SDK (optionnel, pour développement local)
+- Docker Desktop
+- Ports disponibles: 5000, 8180
 
-### Lancement rapide
+### Installation
 
 ```powershell
-# Se placer dans le dossier du projet
 cd BlazorGameQuest1234
-
-# Démarrer tous les services
 docker-compose up -d
-
-# Vérifier que les conteneurs tournent
-docker ps
 ```
 
-### Services disponibles
+### Configuration Keycloak (première utilisation)
 
-- **Application** : http://localhost:5000
-- **Keycloak Admin** : http://localhost:8080 (admin/admin)
-- **API Gateway** : http://localhost:5000/api/*
-- **GameAPI Swagger** : http://localhost:5001/swagger
-- **PostgreSQL** : localhost:5432 (gamequest_db/P@ssw0rd)
+1. Accéder à http://localhost:8180
+2. Se connecter avec **admin/admin**
+3. Créer le realm **blazor-gamequest**
+4. Créer le client **blazor-client**
+5. Créer les utilisateurs (voir tableau ci-dessous)
 
-### Comptes de test Keycloak
+**Voir détails:** [KEYCLOAK_SETUP.md](BlazorGameQuest1234/KEYCLOAK_SETUP.md)
 
-| Utilisateur | Mot de passe | Rôle |
-|-------------|--------------|------|
-| user1 | user1 | joueur |
-| user2 | user2 | joueur |
-| admin | admin | administrateur |
+### Comptes de test
 
-### Arrêt des services
+| Utilisateur | Mot de passe | Rôle | Accès |
+|-------------|--------------|------|-------|
+| user1 | 1234 | joueur | Jeu uniquement |
+| user2 | 1234 | joueur | Jeu uniquement |
+| admin | admin | administrateur | Dashboard + Gestion complète |
+
+### Accès
+
+- **Application:** http://localhost:5000 (seul point d'entrée)
+- **Keycloak Admin:** http://localhost:8180
+- **Swagger API:** http://localhost:5000/swagger
+
+## 🎮 Utilisation
+
+1. Ouvrir http://localhost:5000
+2. Se connecter avec un compte (user1/1234 ou admin/admin)
+3. "Nouvelle aventure" → Choisir difficulté
+4. Explorer le donjon (5 salles)
+5. Actions: Attaquer, Fuir, Fouiller, Se reposer
+
+## 🔐 Tester les API
+
+### Obtenir un token JWT
 
 ```powershell
-docker-compose down
+# Via script PowerShell
+.\scripts\get-token-simple.ps1 admin
+
+# Ou manuellement
+$response = Invoke-RestMethod -Uri "http://localhost:8180/realms/blazor-gamequest/protocol/openid-connect/token" `
+  -Method Post -ContentType "application/x-www-form-urlencoded" `
+  -Body @{client_id="blazor-client"; username="admin"; password="admin"; grant_type="password"}
+$response.access_token | Set-Clipboard
 ```
 
-## 💻 Développement Local (sans Docker)
+### Utiliser dans Swagger
 
-### Prérequis
-- .NET 9 SDK
-- PostgreSQL installé localement (ou utiliser InMemory)
+1. Ouvrir http://localhost:5000/swagger
+2. Cliquer **Authorize** 🔒
+3. Coller le token (sans "Bearer ")
+4. Tester les endpoints
 
-### Lancement manuel
+**Voir détails:** [SWAGGER_AUTHENTICATION_GUIDE.md](BlazorGameQuest1234/SWAGGER_AUTHENTICATION_GUIDE.md)
 
-```powershell
-# Terminal 1 - API GameAPI
-cd BlazorGameQuest1234/GameAPI
-dotnet run
-
-# Terminal 2 - API Gateway
-cd BlazorGameQuest1234/ApiGateway
-dotnet run
-
-# Terminal 3 - Client Blazor
-cd BlazorGameQuest1234/BlazorGame.Client
-dotnet run
-```
-
-**Ports en développement :**
-- Client : http://localhost:5003
-- Gateway : http://localhost:5000
-- GameAPI : http://localhost:5001
-
-## 🧪 Tests Unitaires
+## 🧪 Tests
 
 ```powershell
-# Exécuter tous les tests (35 tests)
 cd BlazorGameQuest1234
 dotnet test
-
-# Avec couverture de code
-dotnet test --collect:"XPlat Code Coverage"
-
-# Tests avec détails
-dotnet test --logger "console;verbosity=detailed"
+# 49 tests unitaires - Couverture 40%
 ```
 
-**Couverture :** Services (DungeonGenerator, GameSession), Contrôleurs (Users, Players, Dungeons, Rooms), Intégration
+## 📚 Technologies
 
-## 🔐 Sécurité et Authentification
+- **.NET 9** - Framework
+- **Blazor WebAssembly** - Frontend
+- **ASP.NET Core Web API** - Backend
+- **YARP** - API Gateway
+- **Keycloak 21.1.1** - Authentification
+- **EF Core 9** - ORM
+- **PostgreSQL/InMemory** - Base de données
+- **xUnit** - Tests
+- **Docker** - Conteneurisation
 
-### Architecture de sécurité
-1. **Keycloak** : Gestion des utilisateurs et génération de JWT
-2. **API Gateway** : Validation des tokens JWT entrants
-3. **GameAPI** : Autorisation basée sur les rôles via `[Authorize]`
-4. **Lien BD** : Champ `KeycloakUserId` dans table Players (auto-rempli depuis JWT `sub` claim)
+## 🛠️ Commandes Docker
 
-### Endpoints sécurisés (admin uniquement)
-- `POST/PUT/DELETE /api/players` - Gestion joueurs
-- `POST/PUT/DELETE /api/users` - Gestion utilisateurs
-- `POST/PUT/DELETE /api/dungeons` - Gestion donjons
-- `GET /api/users/dashboard-stats` - Statistiques globales
-
-### Test Swagger avec authentification
-
-1. Ouvrir http://localhost:5001/swagger
-2. Cliquer sur **"Authorize"** 🔒
-3. Obtenir un token JWT depuis Keycloak ou depuis l'application
-4. Entrer : `Bearer VOTRE_TOKEN_ICI`
-5. Tester les endpoints protégés
-
-## 📚 Documentation Complète
-
-- [KEYCLOAK_SETUP.md](BlazorGameQuest1234/KEYCLOAK_SETUP.md) - Configuration Keycloak détaillée (realm, clients, rôles)
-- [DOCKER_DEPLOYMENT.md](BlazorGameQuest1234/DOCKER_DEPLOYMENT.md) - Guide complet Docker Compose
-- [SECURITY_IMPROVEMENTS.md](BlazorGameQuest1234/SECURITY_IMPROVEMENTS.md) - 15 endpoints sécurisés + KeycloakUserId
-- [CHANGELOG_SECURITY.md](BlazorGameQuest1234/CHANGELOG_SECURITY.md) - Résumé des changements de sécurité
-
-## 📖 Utilisation du Jeu
-
-1. **Accéder à l'application** : http://localhost:5000
-2. **Se connecter** : Cliquer sur "Se connecter avec Keycloak" (user1/user1 ou admin/admin)
-3. **Démarrer une aventure** : Choisir une difficulté (Facile/Normal/Difficile)
-4. **Explorer le donjon** : 5 salles avec défis aléatoires
-5. **Prendre des décisions** : Combat, Fuite, Fouille, Repos selon la situation
-6. **Consulter le classement** : Voir les meilleurs scores (menu "Classement")
-7. **Dashboard admin** : Si rôle administrateur, gérer joueurs et consulter statistiques
-
-## 🎯 Endpoints API Principaux
-
-```http
-# Gestion du jeu
-POST   /api/game/start-adventure          # Démarrer une nouvelle partie
-GET    /api/game/session/{id}             # Récupérer l'état d'une session
-POST   /api/game/session/{id}/action      # Exécuter une action (combat, fuite, etc.)
-POST   /api/game/session/{id}/next-room   # Passer à la salle suivante
-
-# CRUD Joueurs (admin POST/PUT/DELETE)
-GET    /api/players                        # Lister tous les joueurs
-POST   /api/players                        # Créer un joueur [Authorize(admin)]
-GET    /api/players/{id}                   # Détails d'un joueur
-PUT    /api/players/{id}                   # Modifier un joueur [Authorize(admin)]
-DELETE /api/players/{id}                   # Supprimer un joueur [Authorize(admin)]
-
-# CRUD Utilisateurs (admin only)
-GET    /api/users                          # Lister utilisateurs [Authorize(admin)]
-POST   /api/users                          # Créer utilisateur [Authorize(admin)]
-GET    /api/users/dashboard-stats          # Statistiques [Authorize(admin)]
-```
-
-## 🔧 Configuration
-
-### appsettings.json (GameAPI)
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=postgres;Port=5432;Database=gamequest_db;Username=gamequest_user;Password=P@ssw0rd"
-  },
-  "Keycloak": {
-    "Authority": "http://keycloak:8080/realms/blazor-gamequest"
-  },
-  "ApiSettings": {
-    "AllowedOrigins": ["http://localhost:5000", "http://localhost:5003"]
-  }
-}
-```
-
-### docker-compose.yml
-
-Contient la configuration complète pour :
-- Keycloak (8080)
-- PostgreSQL (5432)
-- GameAPI (5001)
-- ApiGateway (5000)
-- BlazorClient (5003)
-
-## 📦 Structure des Données
-
-### Modèles principaux
-- **User** : Comptes utilisateurs (Username, Email, PasswordHash, Role, IsActive)
-- **Player** : Profils joueurs (Name, Level, XP, TotalScore, GamesPlayed, **KeycloakUserId**)
-- **Dungeon** : Définition des donjons (Name, Description, Difficulty, Rooms)
-- **Room** : Salles individuelles (Name, Description, RoomType, MonsterName, Treasure)
-- **GameSession** : Sessions de jeu actives (état, statistiques, progression)
-
-## 🐛 Troubleshooting
-
-### Problème : Les conteneurs Docker ne démarrent pas
 ```powershell
-# Vérifier les logs
-docker-compose logs
+# Démarrer
+docker-compose up -d
 
-# Supprimer et recréer
-docker-compose down -v
-docker-compose up --build
+# Arrêter
+docker-compose down
+
+# Logs
+docker-compose logs -f
+
+# Rebuild
+docker-compose up --build -d
 ```
 
-### Problème : Erreur d'authentification Keycloak
-- Vérifier que Keycloak est bien démarré (http://localhost:8080)
-- Vérifier les credentials (user1/user1, admin/admin)
-- Vider le cache du navigateur et réessayer
+## 🐛 Dépannage
 
-### Problème : Migration de base de données échoue
-```powershell
-# En développement, utiliser InMemory (automatique si pas de ConnectionString)
-# En production, vérifier PostgreSQL et appliquer manuellement :
-cd BlazorGameQuest1234/DataAccess
-dotnet ef database update
-```
+**Erreur 401 sur Swagger:** Token expiré (5 min) → Récupérer nouveau token  
+**Keycloak inaccessible:** Attendre 1-2 min après démarrage  
+**Port 5000 occupé:** Vérifier avec `Get-NetTCPConnection -LocalPort 5000`
 
-## 👥 Contributeurs
+## 📖 Documentation
 
-- **Arezki BEGGAR** - Développement Backend, Docker, Keycloak
-- **Ilyas HADJADJ** - Développement Frontend, Tests, Intégration
+- [KEYCLOAK_SETUP.md](BlazorGameQuest1234/KEYCLOAK_SETUP.md) - Configuration Keycloak complète
+- [DOCKER_DEPLOYMENT.md](BlazorGameQuest1234/DOCKER_DEPLOYMENT.md) - Déploiement Docker détaillé
+- [SWAGGER_AUTHENTICATION_GUIDE.md](BlazorGameQuest1234/SWAGGER_AUTHENTICATION_GUIDE.md) - Test API avec JWT
 
-## 📄 Licence
+## ✅ Conformité Projet
 
-Projet académique - EFREI Paris 2024
+- ✅ 2 joueurs (user1/user2) + 1 admin avec bons rôles
+- ✅ Gateway port 5000 HTTP uniquement
+- ✅ Authentification Keycloak + JWT
+- ✅ Lien base de données via KeycloakUserId
+- ✅ Tests unitaires + Couverture
+- ✅ Docker Compose fonctionnel
 
 ---
 
-**Version actuelle : 5.0** - Authentification Keycloak + Microservices + Docker
+**Version 5.0** - Microservices + Keycloak + Docker + API Gateway

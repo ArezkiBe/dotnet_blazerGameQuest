@@ -16,31 +16,45 @@ public class AuthenticatedHttpClient
         _tokenService = tokenService;
     }
 
+    /// <summary>
+    /// Envoie une requête GET avec le token JWT dans le header Authorization
+    /// </summary>
     public async Task<HttpResponseMessage> GetAsync(string requestUri)
     {
         await SetAuthorizationHeaderAsync();
         return await _httpClient.GetAsync(requestUri);
     }
 
+    /// <summary>
+    /// Envoie une requête POST avec le token JWT dans le header Authorization
+    /// </summary>
     public async Task<HttpResponseMessage> PostAsync(string requestUri, HttpContent content)
     {
         await SetAuthorizationHeaderAsync();
         return await _httpClient.PostAsync(requestUri, content);
     }
 
+    /// <summary>
+    /// Envoie une requête PUT avec le token JWT dans le header Authorization
+    /// </summary>
     public async Task<HttpResponseMessage> PutAsync(string requestUri, HttpContent content)
     {
         await SetAuthorizationHeaderAsync();
         return await _httpClient.PutAsync(requestUri, content);
     }
 
+    /// <summary>
+    /// Envoie une requête DELETE avec le token JWT dans le header Authorization
+    /// </summary>
     public async Task<HttpResponseMessage> DeleteAsync(string requestUri)
     {
         await SetAuthorizationHeaderAsync();
         return await _httpClient.DeleteAsync(requestUri);
     }
 
-    // Méthodes d'extension JSON
+    /// <summary>
+    /// Envoie une requête POST JSON avec le token JWT dans le header Authorization
+    /// </summary>
     public async Task<HttpResponseMessage> PostAsJsonAsync<T>(string requestUri, T value, System.Text.Json.JsonSerializerOptions? options = null)
     {
         await SetAuthorizationHeaderAsync();

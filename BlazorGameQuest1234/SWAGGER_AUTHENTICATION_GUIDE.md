@@ -1,209 +1,116 @@
-# 🔐 Guide d'Authentification Swagger
+# Test API avec Swagger - BlazorGameQuest
 
-## Comment tester les API avec Swagger
+## Configuration Swagger Corrigée ✅
 
-### Méthode 1 : Via Keycloak directement (Recommandé pour les tests)
+Le schéma d'authentification a été corrigé dans `GameAPI/Program.cs`:
 
-1. **Obtenir un token via l'API de Keycloak**
+```csharp
+// ✅ Maintenant
+Type = SecuritySchemeType.Http,
+Scheme = "bearer",
+BearerFormat = "JWT"
+```
+
+Swagger ajoute automatiquement "Bearer " au token.
+
+## Obtenir un Token JWT
+
+### Méthode 1: Script PowerShell (Recommandé)
+
+```powershell
+.\scripts\get-token-simple.ps1 admin   # Pour admin
+.\scripts\get-token-simple.ps1 user    # Pour user1
+```
+
+Le token est copié automatiquement dans le presse-papiers.
+
+### Méthode 2: PowerShell Manuel (Windows)
+
+```powershell
+# Admin
+$response = Invoke-RestMethod -Uri "http://localhost:8180/realms/blazor-gamequest/protocol/openid-connect/token" `
+  -Method Post -ContentType "application/x-www-form-urlencoded" `
+  -Body @{client_id="blazor-client"; username="admin"; password="admin"; grant_type="password"}
+$response.access_token | Set-Clipboard
+
+# User1
+$response = Invoke-RestMethod -Uri "http://localhost:8180/realms/blazor-gamequest/protocol/openid-connect/token" `
+  -Method Post -ContentType "application/x-www-form-urlencoded" `
+  -Body @{client_id="blazor-client"; username="user1"; password="1234"; grant_type="password"}
+$response.access_token | Set-Clipboard
+```
+
+### Méthode 2b: Bash/curl (Mac/Linux/WSL)
 
 ```bash
-# Pour un utilisateur joueur (user1)
-curl -X POST "http://localhost:8080/realms/blazor-gamequest/protocol/openid-connect/token" \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "client_id=blazor-client" \
-  -d "username=user1" \
-  -d "password=user1" \
-  -d "grant_type=password"
-
-# Pour un administrateur (admin)
-curl -X POST "http://localhost:8180/realms/blazor-gamequest/protocol/openid-connect/token" \
+# Admin
+TOKEN=$(curl -s -X POST "http://localhost:8180/realms/blazor-gamequest/protocol/openid-connect/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "client_id=blazor-client" \
   -d "username=admin" \
   -d "password=admin" \
-  -d "grant_type=password"
-```
-
-2. **Copier l'access_token** du JSON retourné
-
-```json
-{
-  "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI...",
-  "expires_in": 300,
-  "refresh_expires_in": 1800,
-  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldU...",
-  "token_type": "Bearer"
-}
-```
-
-3. **Dans Swagger UI (http://localhost:5001/swagger)**
-   - Cliquer sur le bouton **"Authorize"** 🔒 (en haut à droite)
-   - Dans le champ "Value", entrer : `Bearer VOTRE_ACCESS_TOKEN_ICI`
-   - Cliquer sur "Authorize"
-   - Cliquer sur "Close"
-
-4. **Tester les endpoints**
-   - Les requêtes incluront automatiquement l'en-tête `Authorization: Bearer ...`
-   - Tester les endpoints protégés comme `POST /api/players`
-
-### Méthode 2 : Via PowerShell (Windows)
-
-```powershell
-# Utilisateur joueur
-$response = Invoke-RestMethod -Uri "http://localhost:8080/realms/blazor-gamequest/protocol/openid-connect/token" `
-  -Method Post `
-  -ContentType "application/x-www-form-urlencoded" `
-  -Body @{
-    client_id="blazor-client"
-    username="user1"
-    password="user1"
-    grant_type="password"
-  }
-
-# Afficher le token
-$response.access_token
+  -d "grant_type=password" | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
 
 # Copier dans le presse-papiers
-$response.access_token | Set-Clipboard
-Write-Host "Token copié dans le presse-papiers!"
+echo $TOKEN | pbcopy          # macOS
+echo $TOKEN | xclip -sel clip # Linux (installer: sudo apt install xclip)
+echo $TOKEN | clip.exe        # WSL
+
+# User1
+TOKEN=$(curl -s -X POST "http://localhost:8180/realms/blazor-gamequest/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id=blazor-client" \
+  -d "username=user1" \
+  -d "password=1234" \
+  -d "grant_type=password" | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
+
+echo $TOKEN | pbcopy  # ou xclip/clip.exe
 ```
 
-```powershell
-# Administrateur
-$response = Invoke-RestMethod -Uri "http://localhost:8080/realms/blazor-gamequest/protocol/openid-connect/token" `
-  -Method Post `
-  -ContentType "application/x-www-form-urlencoded" `
-  -Body @{
-    client_id="blazor-client"
-    username="admin"
-    password="admin"
-    grant_type="password"
-  }
+## Utiliser dans Swagger
 
-$response.access_token | Set-Clipboard
-Write-Host "Token admin copié!"
-```
+1. Ouvrir http://localhost:5000/swagger
+2. Cliquer **Authorize** 🔒
+3. Coller le token (**sans** "Bearer ")
+4. Cliquer "Authorize" → "Close"
+5. Tester les endpoints
 
-### Méthode 3 : Via l'application Blazor (Méthode visuelle)
+## Comptes
 
-1. **Se connecter à l'application** : http://localhost:5000
-2. **Ouvrir les DevTools du navigateur** (F12)
-3. **Aller dans l'onglet "Application" ou "Storage"**
-4. **Rechercher dans "Local Storage" → `http://localhost:5000`**
-5. **Copier la valeur de la clé `authToken`**
-6. **Utiliser ce token dans Swagger** (ajouter `Bearer ` devant)
+| Username | Password | Rôle | Accès |
+|----------|----------|------|-------|
+| user1 | 1234 | joueur | Endpoints publics |
+| user2 | 1234 | joueur | Endpoints publics |
+| admin | admin | administrateur | Tous endpoints |
 
-### Méthode 4 : Via Postman (Alternative à Swagger)
+## Endpoints Disponibles
 
-1. Créer une nouvelle requête POST
-2. URL : `http://localhost:8080/realms/blazor-gamequest/protocol/openid-connect/token`
-3. Body → x-www-form-urlencoded :
-   - `client_id` = `blazor-client`
-   - `username` = `admin` (ou `user1`)
-   - `password` = `admin` (ou `user1`)
-   - `grant_type` = `password`
-4. Envoyer → Copier `access_token`
-
-## 🧪 Test Rapide des Endpoints
-
-### Endpoints publics (pas besoin de token)
+### Publics (authentification requise)
 ```http
-GET http://localhost:5001/api/players
-GET http://localhost:5001/api/dungeons
+GET  /api/players
+GET  /api/dungeons
+POST /api/game/start-adventure
+POST /api/game/session/{id}/action
 ```
 
-### Endpoints admin (nécessitent token administrateur)
+### Admin uniquement
 ```http
-POST http://localhost:5001/api/players
-PUT http://localhost:5001/api/players/1
-DELETE http://localhost:5001/api/players/1
-GET http://localhost:5001/api/users
+POST   /api/players
+PUT    /api/players/{id}
+DELETE /api/players/{id}
+GET    /api/users
+GET    /api/users/dashboard-stats
 ```
 
-## 📋 Comptes de Test
+## Notes
 
-| Username | Password | Rôle | Description |
-|----------|----------|------|-------------|
-| `user1` | `user1` | joueur | Compte joueur standard |
-| `user2` | `user2` | joueur | Compte joueur standard |
-| `admin` | `admin` | administrateur | Accès complet |
+- **Expiration:** 5 minutes (300 secondes)
+- **Erreur 401:** Token expiré → récupérer nouveau token
+- **Accès:** Tout passe par le Gateway (port 5000)
+- **Keycloak:** http://localhost:8180
 
-## 🔍 Vérifier le contenu d'un Token JWT
+## Dépannage
 
-Pour décoder et voir les claims du token (utile pour vérifier les rôles) :
-
-1. Aller sur https://jwt.io
-2. Coller le token dans la zone "Encoded"
-3. Vérifier les claims dans "Payload" :
-   ```json
-   {
-     "sub": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-     "preferred_username": "admin",
-     "realm_access": {
-       "roles": ["administrateur"]
-     }
-   }
-   ```
-
-## 🚀 Script Complet PowerShell (Pour le Prof)
-
-Créer un fichier `get-token.ps1` :
-
-```powershell
-param(
-    [Parameter(Mandatory=$false)]
-    [ValidateSet("user1", "user2", "admin")]
-    [string]$User = "admin"
-)
-
-Write-Host "🔐 Obtention du token JWT pour : $User" -ForegroundColor Cyan
-
-$body = @{
-    client_id = "blazor-client"
-    username = $User
-    password = $User
-    grant_type = "password"
-}
-
-try {
-    $response = Invoke-RestMethod -Uri "http://localhost:8080/realms/blazor-gamequest/protocol/openid-connect/token" `
-        -Method Post `
-        -ContentType "application/x-www-form-urlencoded" `
-        -Body $body
-
-    $token = $response.access_token
-    $token | Set-Clipboard
-    
-    Write-Host "✅ Token obtenu avec succès!" -ForegroundColor Green
-    Write-Host "📋 Token copié dans le presse-papiers" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "🔗 Pour Swagger UI:" -ForegroundColor Yellow
-    Write-Host "   1. Ouvrir http://localhost:5001/swagger" -ForegroundColor White
-    Write-Host "   2. Cliquer sur 'Authorize' 🔒" -ForegroundColor White
-    Write-Host "   3. Entrer: Bearer <Ctrl+V pour coller>" -ForegroundColor White
-    Write-Host ""
-    Write-Host "Token (30 premiers caractères):" -ForegroundColor Gray
-    Write-Host $token.Substring(0, 30)... -ForegroundColor DarkGray
-    
-} catch {
-    Write-Host "❌ Erreur lors de l'obtention du token" -ForegroundColor Red
-    Write-Host $_.Exception.Message -ForegroundColor Red
-}
-```
-
-**Utilisation :**
-```powershell
-# Pour admin
-.\get-token.ps1 -User admin
-
-# Pour user1
-.\get-token.ps1 -User user1
-```
-
-## 📝 Notes Importantes
-
-- Les tokens expirent après **5 minutes** (300 secondes)
-- Si vous obtenez une erreur 401, redemander un nouveau token
-- Le token admin contient le rôle `administrateur`
-- Le token user contient le rôle `joueur`
-- Keycloak doit être démarré (http://localhost:8080)
+**401 Unauthorized:** Token expiré ou invalide  
+**403 Forbidden:** Rôle insuffisant (endpoint admin)  
+**Keycloak inaccessible:** Vérifier `docker-compose ps`

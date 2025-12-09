@@ -1,279 +1,127 @@
-# Guide de Déploiement Docker - BlazorGameQuest
+# Déploiement Docker - BlazorGameQuest
 
-## Vue d'ensemble
-Ce guide détaille le déploiement complet de l'application BlazorGameQuest avec Docker, incluant tous les services nécessaires.
+## Architecture
 
-## Architecture de déploiement
+| Service | Port | Description |
+|---------|------|-------------|
+| Keycloak | 8180 | Authentification (public) |
+| ApiGateway | 5000 | Point d'entrée HTTP unique (public) |
+| GameAPI | 5001 | API REST (interne) |
+| BlazorClient | 80 | Frontend (interne) |
 
-### Services déployés
-- **Keycloak** : Serveur d'authentification (Port 8180)
-- **GameAPI** : API REST backend (Port 5001)
-- **ApiGateway** : Passerelle YARP (Port 5000) 
-- **BlazorClient** : Interface utilisateur WebAssembly (Port 5002)
+Tous les services communiquent via le réseau Docker `appnet`.
 
-### Réseau Docker
-Tous les services communiquent via le réseau `appnet` pour une isolation et sécurité optimales.
+## Démarrage Rapide
 
-## Prérequis
-
-### Système
-- **Docker Desktop** : Version 20.10 ou supérieure
-- **Docker Compose** : Version 2.0 ou supérieure
-- **Ports disponibles** : 5000, 5001, 5002, 8180
-
-### Vérification des prérequis
 ```bash
-docker --version
-docker-compose --version
-```
-
-## Étape 1 : Préparation de l'environnement
-
-### 1.1 Clone et navigation
-```bash
-git clone <your-repo-url>
 cd BlazorGameQuest1234
+docker-compose up -d
 ```
 
-### 1.2 Vérification de la structure
-```bash
-ls -la
-# Vérifier la présence de :
-# - docker-compose.yml
-# - Dockerfiles dans chaque projet
-# - appsettings.json correctement configurés
-```
+## Étapes Détaillées
 
-## Étape 2 : Construction des images
+### 1. Démarrer Keycloak
 
-### 2.1 Construction de toutes les images
-```bash
-docker-compose build
-```
-
-### 2.2 Vérification des images créées
-```bash
-docker images | grep blazorgame
-```
-
-Vous devriez voir :
-- `blazorgamequestcompose-gameapi`
-- `blazorgamequestcompose-apigateway`  
-- `blazorgamequestcompose-blazor-client`
-
-## Étape 3 : Déploiement des services
-
-### 3.1 Démarrage de Keycloak en premier
 ```bash
 docker-compose up keycloak -d
+docker-compose logs -f keycloak  # Attendre "Keycloak ... started"
 ```
 
-### 3.2 Attendre l'initialisation de Keycloak
-```bash
-# Vérifier que Keycloak est prêt
-docker-compose logs keycloak
+### 2. Configurer Keycloak
 
-# Attendre le message : "Keycloak ... started"
-```
+Suivre [KEYCLOAK_SETUP.md](KEYCLOAK_SETUP.md) pour:
+- Créer realm `blazor-gamequest`
+- Créer client `blazor-client`
+- Créer utilisateurs (user1/1234, user2/1234, admin/admin)
 
-### 3.3 Configuration de Keycloak
-Suivre le guide `KEYCLOAK_SETUP.md` pour configurer :
-- Le realm `blazor-gamequest`
-- Le client `blazor-game-client`  
-- Les utilisateurs et rôles
+### 3. Démarrer tous les services
 
-### 3.4 Démarrage de tous les services
 ```bash
 docker-compose up -d
 ```
 
-## Étape 4 : Vérification du déploiement
+### 4. Vérifier
 
-### 4.1 État des conteneurs
 ```bash
+# État des conteneurs
 docker-compose ps
+
+# Logs
+docker-compose logs -f
+
+# Test Keycloak
+curl http://localhost:8180/realms/blazor-gamequest/.well-known/openid-configuration
+
+# Test Gateway
+curl -I http://localhost:5000
 ```
 
-Tous les services doivent être dans l'état `running`.
+## Test de l'Application
 
-### 4.2 Vérification des logs
+1. Ouvrir http://localhost:5000
+2. Se connecter avec:
+   - **user1/1234** (joueur)
+   - **user2/1234** (joueur)
+   - **admin/admin** (administrateur)
+3. Tester les fonctionnalités
+
+## Configuration Réseau
+
+**Communication interne (docker-compose.yml):**
+```yaml
+Gateway → GameAPI:     http://gameapi:5001
+Gateway → BlazorClient: http://blazor-client:80
+Services → Keycloak:    http://keycloak:8080
+```
+
+**Accès externe:**
+- Client → Gateway: `http://localhost:5000` (HTTP uniquement)
+- Client → Keycloak: `http://localhost:8180`
+
+## Commandes Utiles
+
 ```bash
-# Logs de tous les services
-docker-compose logs
-
-# Logs d'un service spécifique
-docker-compose logs gameapi
-docker-compose logs apigateway
-docker-compose logs blazor-client
-```
-
-### 4.3 Test des endpoints
-
-**Keycloak :**
-```bash
-curl http://localhost:8180/realms/blazor-gamequest/.well-known/openid_configuration
-```
-
-**API Gateway :**
-```bash
-curl http://localhost:5000/health
-```
-
-**Game API (via Gateway) :**
-```bash
-curl http://localhost:5000/api/health
-```
-
-**Blazor Client :**
-```bash
-curl -I http://localhost:5002
-```
-
-## Étape 5 : Test de l'application complète
-
-### 5.1 Accès à l'interface
-1. Ouvrir `http://localhost:5002`
-2. Vérifier que l'interface Blazor se charge
-3. Tester le bouton de connexion
-
-### 5.2 Test d'authentification
-1. Se connecter avec `user1` / `password123`
-2. Vérifier la redirection après connexion
-3. Tester l'accès aux fonctionnalités du jeu
-
-### 5.3 Test des API
-1. Une fois connecté, ouvrir les outils développeur
-2. Vérifier que les appels API fonctionnent
-3. Tester la création d'une nouvelle partie
-
-## Configuration réseau
-
-### Communication inter-services
-Les services utilisent les noms Docker pour communiquer :
-
-**Dans ApiGateway (appsettings.json) :**
-```json
-{
-  "ReverseProxy": {
-    "Clusters": {
-      "GameAPI": {
-        "Destinations": {
-          "gameapi": {
-            "Address": "http://gameapi:5001/"
-          }
-        }
-      },
-      "BlazorClient": {
-        "Destinations": {
-          "blazor-client": {
-            "Address": "http://blazor-client:5002/"
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-**Dans BlazorClient (Program.cs) :**
-```csharp
-builder.Services.AddScoped(sp => new HttpClient 
-{ 
-    BaseAddress = new Uri("http://apigateway:5000/")
-});
-```
-
-## Commandes utiles
-
-### Gestion des services
-```bash
-# Arrêt de tous les services
+# Arrêter
 docker-compose down
 
-# Redémarrage d'un service spécifique
-docker-compose restart gameapi
-
-# Reconstruction et redémarrage
+# Reconstruire
 docker-compose up --build -d
 
-# Suppression complète (attention : perd les données)
-docker-compose down -v --remove-orphans
-```
-
-### Débogage
-```bash
-# Inspection d'un conteneur
-docker inspect blazorgamequestcompose-gameapi-1
-
-# Accès shell dans un conteneur
-docker-compose exec gameapi /bin/bash
-
-# Surveillance des logs en temps réel
+# Logs service spécifique
 docker-compose logs -f gameapi
-```
 
-### Nettoyage
-```bash
-# Suppression des images non utilisées
-docker image prune
+# Nettoyer complètement
+docker-compose down -v --remove-orphans
 
-# Suppression complète des ressources du projet
-docker-compose down -v --remove-orphans --rmi all
+# Ressources
+docker stats
 ```
 
 ## Dépannage
 
-### Problème : Port déjà utilisé
+**Conteneurs ne démarrent pas:**
 ```bash
-# Vérifier les ports en cours d'utilisation
-netstat -tulpn | grep :5000
-
-# Arrêter le processus occupant le port
-kill -9 <PID>
+docker-compose logs
+docker-compose down -v
+docker-compose up --build -d
 ```
 
-### Problème : Service ne démarre pas
-1. Vérifier les logs : `docker-compose logs <service>`
-2. Vérifier la configuration réseau
-3. Redémarrer le service : `docker-compose restart <service>`
-
-### Problème : Erreur de connexion entre services
-1. Vérifier que tous les services sont sur le même réseau
-2. Utiliser les noms de services Docker (pas localhost)
-3. Vérifier les ports internes (pas les ports exposés)
-
-### Problème : Keycloak non accessible
-1. Attendre l'initialisation complète (peut prendre 1-2 minutes)
-2. Vérifier les logs : `docker-compose logs keycloak`
-3. Redémarrer si nécessaire : `docker-compose restart keycloak`
-
-## Surveillance et maintenance
-
-### Monitoring des ressources
-```bash
-# Utilisation CPU/Mémoire par conteneur
-docker stats
-
-# Espace disque utilisé par Docker
-docker system df
+**Port 5000 occupé:**
+```powershell
+Get-Process -Id (Get-NetTCPConnection -LocalPort 5000).OwningProcess
 ```
 
-### Backup des données
-```bash
-# Export des volumes (si utilisation de base de données persistante)
-docker-compose exec gameapi tar -czf /tmp/backup.tar.gz /app/data
-docker cp container_id:/tmp/backup.tar.gz ./backup.tar.gz
-```
+**Keycloak non accessible:** Attendre 1-2 minutes après démarrage
+
+**Gateway renvoie 404:** Vérifier que GameAPI et BlazorClient sont démarrés
 
 ## Production
 
-⚠️ **Cette configuration est pour le développement uniquement.**
+⚠️ Configuration pour développement uniquement.
 
-Pour la production :
-1. Utiliser HTTPS partout
-2. Configurer des secrets externes
-3. Utiliser des bases de données persistantes
-4. Configurer la surveillance et les logs
-5. Mettre en place des health checks
-6. Configurer les limites de ressources
-7. Utiliser des registres d'images privés
+Pour production:
+- Utiliser HTTPS
+- Secrets externes
+- Base de données persistante
+- Health checks
+- Limites de ressources

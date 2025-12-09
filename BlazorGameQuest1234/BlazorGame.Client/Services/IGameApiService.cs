@@ -58,12 +58,6 @@ public interface IGameApiService
     Task<List<User>> GetUsersAsync();
     
     /// <summary>
-    /// Récupère les informations publiques des utilisateurs (pour tous les utilisateurs connectés)
-    /// </summary>
-    /// <returns>Liste des utilisateurs publics</returns>
-    Task<List<User>> GetPublicUsersAsync();
-    
-    /// <summary>
     /// Récupère un utilisateur par son ID
     /// </summary>
     /// <param name="userId">ID de l'utilisateur</param>

@@ -428,25 +428,34 @@ else
         await JSRuntime.InvokeVoidAsync("downloadFile", filename, "text/csv", bytes);
     }
 
+    /// <summary>
+    /// Convertit une liste d'objets en format CSV conforme RFC 4180
+    /// Utilise la réflexion pour extraire les propriétés et leurs valeurs
+    /// Gère l'échappement des virgules et guillemets selon les règles CSV
+    /// </summary>
     private string ConvertToCsv(object data)
     {
         var sb = new StringBuilder();
         
         if (data is IEnumerable<object> list && list.Any())
         {
+            // Utilise le premier élément pour déterminer la structure (propriétés)
             var first = list.First();
             var properties = first.GetType().GetProperties();
             
-            // Header
+            // Ligne d'en-tête : noms des propriétés séparés par des virgules
             sb.AppendLine(string.Join(",", properties.Select(p => p.Name)));
             
-            // Data
+            // Lignes de données : une ligne par objet
             foreach (var item in list)
             {
                 var values = properties.Select(p => 
                 {
                     var value = p.GetValue(item)?.ToString() ?? "";
-                    // Escape quotes and wrap in quotes if contains comma
+                    
+                    // Échappement CSV conforme RFC 4180 :
+                    // - Si la valeur contient une virgule ou un guillemet, on l'entoure de guillemets
+                    // - Les guillemets à l'intérieur sont doublés ("" pour échapper ")
                     if (value.Contains(",") || value.Contains("\""))
                     {
                         value = "\"" + value.Replace("\"", "\"\"") + "\"";
