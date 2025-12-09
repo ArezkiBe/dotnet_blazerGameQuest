@@ -1,0 +1,204 @@
+@page "/callback"
+@using BlazorGame.Client.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Text.Json
+@using System.Security.Claims
+@inject ITokenService TokenService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@inject HttpClient Http
+@inject IGameApiService GameApi
+
+<div class="callback-container">
+    <div class="spinner-border" role="status">
+        <span class="visually-hidden">Connexion en cours...</span>
+    </div>
+    <p>Connexion en cours...</p>
+</div>
+
+@code {
+    /// <summary>
+    /// Point d'entrée après redirection Keycloak
+    /// 1. Extrait le code d'autorisation de l'URL
+    /// 2. Échange le code contre un token JWT
+    /// 3. Vérifie que le compte utilisateur est actif
+    /// 4. Sauvegarde le token et redirige vers l'accueil
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var uri = new Uri(Navigation.Uri);
+            var queryString = uri.Query;
+            
+            // Parsing manuel des paramètres de l'URL (format: ?code=xxx&session_state=yyy)
+            // Keycloak retourne le code d'autorisation dans l'URL après authentification
+            string? code = null;
+            string? sessionState = null;
+            
+            if (queryString.StartsWith("?"))
+            {
+                var pairs = queryString.Substring(1).Split('&');
+                foreach (var pair in pairs)
+                {
+                    var keyValue = pair.Split('=');
+                    if (keyValue.Length == 2)
+                    {
+                        var key = Uri.UnescapeDataString(keyValue[0]);
+                        var value = Uri.UnescapeDataString(keyValue[1]);
+                        
+                        if (key == "code") code = value;
+                        else if (key == "session_state") sessionState = value;
+                    }
+                }
+            }
+
+            if (!string.IsNullOrEmpty(code))
+            {
+                // ÉTAPE 1 : Échanger le code d'autorisation contre un token JWT
+                // Appel POST vers l'endpoint /token de Keycloak avec grant_type=authorization_code
+                var token = await ExchangeCodeForTokenAsync(code);
+                
+                if (!string.IsNullOrEmpty(token))
+                {
+                    // ÉTAPE 2 : VÉRIFICATION CRITIQUE - Bloquer les comptes désactivés
+                    // Cette vérification empêche les utilisateurs désactivés par un admin de se connecter
+                    var username = ExtractUsernameFromToken(token);
+                    
+                    if (!string.IsNullOrEmpty(username))
+                    {
+                        // Sauvegarder temporairement le token pour authentifier l'appel API de vérification
+                        await TokenService.SetTokenAsync(token);
+                        
+                        try
+                        {
+                            // Appel API pour vérifier le statut IsActive du compte
+                            var userInfo = await GameApi.GetUserByUsernameAsync(username);
+                            
+                            if (userInfo != null && !userInfo.IsActive)
+                            {
+                                // Compte désactivé : supprimer le token et afficher page de blocage
+                                await TokenService.RemoveTokenAsync();
+                                Navigation.NavigateTo("/account-disabled", true);
+                                return;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Erreur lors de la vérification du statut: {ex.Message}");
+                            // En cas d'erreur API, on laisse passer (AccountStatusGuard vérifiera après)
+                        }
+                    }
+                    
+                    // Compte actif : continuer normalement
+                    // Notifier le changement d'état d'authentification
+                    if (AuthStateProvider is CustomAuthStateProvider customProvider)
+                    {
+                        customProvider.NotifyUserAuthentication(token);
+                    }
+                    
+                    // Rediriger vers la page d'accueil
+                    Navigation.NavigateTo("/", true);
+                    return;
+                }
+            }
+
+            // Si pas de code ou échec d'échange, rediriger vers login
+            Navigation.NavigateTo("/login");
+        }
+        catch (Exception)
+        {
+            Navigation.NavigateTo("/login");
+        }
+    }
+
+    /// <summary>
+    /// Extrait le username du payload JWT sans validation complète
+    /// Parse manuellement le token pour récupérer le claim "preferred_username"
+    /// </summary>
+    private string? ExtractUsernameFromToken(string token)
+    {
+        try
+        {
+            // Un JWT a 3 parties séparées par des points : header.payload.signature
+            // Le payload (partie 2) contient les claims en Base64
+            var payload = token.Split('.')[1];
+            var jsonBytes = Convert.FromBase64String(PadBase64(payload));
+            var keyValuePairs = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes);
+            
+            if (keyValuePairs != null && keyValuePairs.TryGetValue("preferred_username", out var usernameObj))
+            {
+                return usernameObj.ToString();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de l'extraction du username: {ex.Message}");
+        }
+        
+        return null;
+    }
+    
+    /// <summary>
+    /// Ajoute le padding nécessaire pour décoder une chaîne Base64
+    /// Le payload JWT peut manquer le padding '=' requis pour le décodage
+    /// </summary>
+    private string PadBase64(string base64)
+    {
+        return base64.PadRight(base64.Length + (4 - base64.Length % 4) % 4, '=');
+    }
+
+    /// <summary>
+    /// Échange le code d'autorisation contre un token JWT via l'endpoint Keycloak
+    /// Implémente le flow OAuth2 Authorization Code Grant
+    /// </summary>
+    private async Task<string?> ExchangeCodeForTokenAsync(string code)
+    {
+        try
+        {
+            var tokenEndpoint = "http://localhost:8180/realms/blazor-gamequest/protocol/openid-connect/token";
+            
+            var formParams = new List<KeyValuePair<string, string>>
+            {
+                new("grant_type", "authorization_code"),
+                new("client_id", "blazor-client"),
+                new("code", code),
+                new("redirect_uri", "http://localhost:5000/callback")
+            };
+            
+            var formContent = new FormUrlEncodedContent(formParams);
+            var response = await Http.PostAsync(tokenEndpoint, formContent);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var tokenResponse = JsonSerializer.Deserialize<KeycloakTokenResponse>(responseContent);
+                return tokenResponse?.access_token;
+            }
+            
+            return null;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+    
+    public class KeycloakTokenResponse
+    {
+        public string? access_token { get; set; }
+        public string? refresh_token { get; set; }
+        public int expires_in { get; set; }
+        public string? token_type { get; set; }
+    }
+}
+
+<style>
+    .callback-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+</style>

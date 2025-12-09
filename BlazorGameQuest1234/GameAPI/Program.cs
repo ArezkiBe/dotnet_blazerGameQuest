@@ -1,12 +1,11 @@
-// <summary>
-// Point d'entrée principal de l'API GameAPI
-// BlazorGameQuest - Service backend REST pour la gestion des parties
-// </summary>
 using Microsoft.EntityFrameworkCore;
 using DataAccess.Data;
 using GameAPI.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
-// Création du builder pour l'application Web API
+// Point d'entrée principal de l'API GameAPI - BlazorGameQuest v5.0
+// Service backend REST pour la gestion des parties avec authentification Keycloak
 var builder = WebApplication.CreateBuilder(args);
 
 // Configuration de la base de données
@@ -49,6 +48,25 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Configuration de l'authentification JWT avec Keycloak
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        var authority = builder.Configuration["Keycloak:Authority"];
+        options.Authority = authority;
+        options.RequireHttpsMetadata = false; // Pour le développement
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = authority,
+            ValidateAudience = false, // Keycloak gère l'audience
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+builder.Services.AddAuthorization();
+
 // Services métier pour la génération de donjons et la gestion des sessions
 builder.Services.AddScoped<IDungeonGeneratorService, DungeonGeneratorService>();
 builder.Services.AddScoped<IGameSessionService, GameSessionService>();
@@ -60,12 +78,40 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
     {
         Title = "BlazorGameQuest API",
-        Version = "v3.0",
-        Description = "API REST pour le jeu BlazorGameQuest - Version 3 avec gameplay interactif complet et persistance des scores",
+        Version = "v5.0",
+        Description = "API REST pour le jeu BlazorGameQuest - Version 5 avec authentification Keycloak, microservices et déploiement Docker",
         Contact = new Microsoft.OpenApi.Models.OpenApiContact
         {
             Name = "BlazorGameQuest Team",
             Email = "admin@blazergamequest.com"
+        }
+    });
+    
+    // Configuration de l'authentification JWT Bearer pour Swagger
+    // IMPORTANT : Utiliser SecuritySchemeType.Http avec Scheme = "bearer" pour que Swagger
+    // envoie correctement le token dans le header "Authorization: Bearer <token>"
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header en utilisant le Bearer scheme. Entrez SEULEMENT le token (sans 'Bearer '). Exemple: 'eyJhbGciOi...'",
+        Name = "Authorization",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
         }
     });
     
@@ -82,6 +128,10 @@ var app = builder.Build();
 
 // Configuration CORS - doit être avant UseAuthentication/UseAuthorization
 app.UseCors("AllowBlazorClient");
+
+// Middleware d'authentification et autorisation
+app.UseAuthentication();
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {

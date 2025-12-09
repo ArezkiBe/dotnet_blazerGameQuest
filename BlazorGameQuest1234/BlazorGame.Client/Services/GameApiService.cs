@@ -6,14 +6,14 @@ namespace BlazorGame.Client.Services;
 
 /// <summary>
 /// Service pour communiquer avec l'API de jeu
-/// Gère toutes les requêtes HTTP vers le backend
+/// Gère toutes les requêtes HTTP vers le backend avec authentification
 /// </summary>
 public class GameApiService : IGameApiService
 {
-    private readonly HttpClient _httpClient;
+    private readonly AuthenticatedHttpClient _httpClient;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    public GameApiService(HttpClient httpClient)
+    public GameApiService(AuthenticatedHttpClient httpClient)
     {
         _httpClient = httpClient;
         _jsonOptions = new JsonSerializerOptions
@@ -34,7 +34,7 @@ public class GameApiService : IGameApiService
         {
             var response = await _httpClient.PostAsync(
                 $"api/game/start-adventure?playerId={playerId}&difficulty={difficulty}", 
-                null);
+                new StringContent(""));
             
             if (response.IsSuccessStatusCode)
             {
@@ -111,7 +111,7 @@ public class GameApiService : IGameApiService
     {
         try
         {
-            var response = await _httpClient.PostAsync($"api/game/session/{sessionId}/next-room", null);
+            var response = await _httpClient.PostAsync($"api/game/session/{sessionId}/next-room", new StringContent(""));
             
             if (response.IsSuccessStatusCode)
             {
@@ -136,7 +136,7 @@ public class GameApiService : IGameApiService
         {
             var response = await _httpClient.PostAsync(
                 $"api/game/session/{sessionId}/end?reason={reason}", 
-                null);
+                new StringContent(""));
             
             if (response.IsSuccessStatusCode)
             {
@@ -176,4 +176,144 @@ public class GameApiService : IGameApiService
         }
     }
 
+    /// <summary>
+    /// Récupère tous les utilisateurs
+    /// </summary>
+    /// <returns>Liste des utilisateurs</returns>
+    public async Task<List<User>> GetUsersAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetFromJsonAsync<List<User>>("api/users", _jsonOptions);
+            return response ?? new List<User>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la récupération des utilisateurs: {ex.Message}");
+            return new List<User>();
+        }
+    }
+
+    /// <summary>
+    /// Récupère un utilisateur par son ID
+    /// </summary>
+    /// <param name="userId">ID de l'utilisateur</param>
+    /// <returns>L'utilisateur ou null si non trouvé</returns>
+    public async Task<User?> GetUserByIdAsync(int userId)
+    {
+        try
+        {
+            return await _httpClient.GetFromJsonAsync<User>($"api/users/{userId}", _jsonOptions);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la récupération de l'utilisateur {userId}: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Récupère un utilisateur par son nom d'utilisateur
+    /// </summary>
+    /// <param name="username">Nom d'utilisateur</param>
+    /// <returns>L'utilisateur ou null si non trouvé</returns>
+    public async Task<User?> GetUserByUsernameAsync(string username)
+    {
+        try
+        {
+            return await _httpClient.GetFromJsonAsync<User>($"api/users/by-username/{username}", _jsonOptions);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la récupération de l'utilisateur {username}: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Récupère l'historique des sessions de jeu d'un utilisateur
+    /// </summary>
+    /// <param name="userId">ID de l'utilisateur</param>
+    /// <returns>Liste des sessions de jeu</returns>
+    public async Task<List<GameSession>> GetUserGameSessionsAsync(int userId)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"api/players/user/{userId}/sessions");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var sessions = await response.Content.ReadFromJsonAsync<List<GameSession>>(_jsonOptions);
+                return sessions ?? new List<GameSession>();
+            }
+            
+            return new List<GameSession>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la récupération des sessions de l'utilisateur {userId}: {ex.Message}");
+            return new List<GameSession>();
+        }
+    }
+
+    /// <summary>
+    /// Récupère les données du joueur actuel par nom d'utilisateur
+    /// </summary>
+    public async Task<(Player? Player, List<GameSession> Sessions)> GetPlayerByUsernameAsync(string username)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"api/players/by-username/{username}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                // Désérialisation manuelle car l'API retourne un objet avec deux propriétés { player, sessions }
+                // qu'on doit extraire séparément pour retourner un tuple
+                var jsonContent = await response.Content.ReadAsStringAsync();
+                var data = JsonSerializer.Deserialize<JsonElement>(jsonContent);
+                
+                Player? player = null;
+                var sessions = new List<GameSession>();
+                
+                if (data.TryGetProperty("player", out var playerElement))
+                {
+                    player = JsonSerializer.Deserialize<Player>(playerElement.GetRawText(), _jsonOptions);
+                }
+                
+                if (data.TryGetProperty("sessions", out var sessionsElement))
+                {
+                    sessions = JsonSerializer.Deserialize<List<GameSession>>(sessionsElement.GetRawText(), _jsonOptions) ?? new List<GameSession>();
+                }
+                
+                return (player, sessions);
+            }
+            
+            return (null, new List<GameSession>());
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la récupération des données du joueur {username}: {ex.Message}");
+            return (null, new List<GameSession>());
+        }
+    }
+
+    /// <summary>
+    /// Met à jour le statut d'activation d'un utilisateur (ADMIN SEULEMENT)
+    /// </summary>
+    /// <param name="userId">ID de l'utilisateur</param>
+    /// <param name="isActive">Nouveau statut d'activation</param>
+    /// <returns>True si la mise à jour a réussi</returns>
+    public async Task<bool> UpdateUserStatusAsync(int userId, bool isActive)
+    {
+        try
+        {
+            var response = await _httpClient.PutAsJsonAsync($"api/users/{userId}/status", isActive, _jsonOptions);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la mise à jour du statut utilisateur {userId}: {ex.Message}");
+            return false;
+        }
+    }
 }

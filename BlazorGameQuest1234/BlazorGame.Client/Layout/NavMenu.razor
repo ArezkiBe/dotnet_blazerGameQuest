@@ -1,82 +1,413 @@
-﻿<div class="game-navbar">
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using BlazorGame.Client.Services
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ITokenService TokenService
+@inject NavigationManager Navigation
+@inject IAuthorizationService AuthService
+
+<div class="game-navbar">
     <div class="navbar-header">
         <div class="brand-container">
             <span class="brand-icon">⚔️</span>
             <a class="navbar-brand" href="">BlazorGameQuest</a>
         </div>
-        <button class="mobile-toggle" @onclick="ToggleNavMenu">
-            <span class="hamburger"></span>
-            <span class="hamburger"></span>
-            <span class="hamburger"></span>
-        </button>
     </div>
 </div>
 
-<div class="game-sidebar @NavMenuCssClass">
+<div class="game-sidebar">
     <nav class="game-nav">
-        <div class="nav-section">
-            <h3 class="nav-title">🏠 Navigation</h3>
-            <div class="nav-item">
-                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                    <span class="nav-icon">🏠</span>
-                    <span class="nav-text">Accueil</span>
-                </NavLink>
-            </div>
-            <div class="nav-item">
-                <NavLink class="nav-link" href="adventure">
-                    <span class="nav-icon">⚔️</span>
-                    <span class="nav-text">Nouvelle Aventure</span>
-                </NavLink>
-            </div>
-            <div class="nav-item">
-                <NavLink class="nav-link" href="game">
-                    <span class="nav-icon">🗡️</span>
-                    <span class="nav-text">Salle de Jeu</span>
-                </NavLink>
-            </div>
-            <div class="nav-item">
-                <NavLink class="nav-link" href="about">
-                    <span class="nav-icon">📜</span>
-                    <span class="nav-text">À Propos</span>
-                </NavLink>
-            </div>
-        </div>
-        
-        <div class="nav-section">
-            <h3 class="nav-title">🛡️ Jeu</h3>
-            <div class="game-stats">
-                <div class="stat-item">
-                    <span class="stat-label">Joueur:</span>
-                    <span class="stat-value">Invité</span>
+        <AuthorizeView>
+            <Authorized>
+                <div class="user-info">
+                    <span class="nav-icon">👤</span>
+                    <span>@context.User.FindFirst("preferred_username")?.Value</span>
+                    @{
+                        var isAdmin = AuthService.IsAdmin(context.User);
+                        var isPlayer = AuthService.IsPlayer(context.User);
+                    }
+                    @if (isAdmin)
+                    {
+                        <span class="badge bg-danger">Admin</span>
+                    }
+                    <button class="btn btn-sm btn-outline-danger" @onclick="Logout">Déconnexion</button>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-label">Score:</span>
-                    <span class="stat-value">0 pts</span>
+                
+                <!-- Section Navigation Principale -->
+                <div class="nav-section">
+                    <h3 class="nav-title">🏠 Navigation</h3>
+                    <div class="nav-item">
+                        <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                            <span class="nav-icon">🏠</span>
+                            <span class="nav-text">Accueil</span>
+                        </NavLink>
+                    </div>
+                    
+                    @* Section Jeu - Visible uniquement aux joueurs *@
+                    @if (isPlayer)
+                    {
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="game">
+                                <span class="nav-icon">🗡️</span>
+                                <span class="nav-text">Jeu</span>
+                            </NavLink>
+                        </div>
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="adventure">
+                                <span class="nav-icon">🗺️</span>
+                                <span class="nav-text">Aventure</span>
+                            </NavLink>
+                        </div>
+                    }
                 </div>
-            </div>
-        </div>
+
+                @* Section Historique - Visible uniquement aux joueurs *@
+                @if (isPlayer)
+                {
+                    <div class="nav-section">
+                        <h3 class="nav-title">📊 Historique</h3>
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="history">
+                                <span class="nav-icon">📈</span>
+                                <span class="nav-text">Mes Parties</span>
+                            </NavLink>
+                        </div>
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="leaderboard">
+                                <span class="nav-icon">🏆</span>
+                                <span class="nav-text">Classement</span>
+                            </NavLink>
+                        </div>
+                    </div>
+                }
+
+                <!-- Section Administration (visible uniquement aux admins) -->
+                @if (isAdmin)
+                {
+                    <div class="nav-section">
+                        <h3 class="nav-title">⚙️ Administration</h3>
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="admin">
+                                <span class="nav-icon">📊</span>
+                                <span class="nav-text">Tableau de Bord</span>
+                            </NavLink>
+                        </div>
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="admin/players">
+                                <span class="nav-icon">👥</span>
+                                <span class="nav-text">Gestion Joueurs</span>
+                            </NavLink>
+                        </div>
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="leaderboard">
+                                <span class="nav-icon">🏆</span>
+                                <span class="nav-text">Classement</span>
+                            </NavLink>
+                        </div>
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="admin/export">
+                                <span class="nav-icon">📥</span>
+                                <span class="nav-text">Export Données</span>
+                            </NavLink>
+                        </div>
+                    </div>
+                }
+
+                <!-- Section Informations -->
+                <div class="nav-section">
+                    <h3 class="nav-title">ℹ️ Informations</h3>
+                    <div class="nav-item">
+                        <NavLink class="nav-link" href="about">
+                            <span class="nav-icon">📖</span>
+                            <span class="nav-text">À Propos</span>
+                        </NavLink>
+                    </div>
+                </div>
+                
+            </Authorized>
+            <NotAuthorized>
+                <div class="nav-item">
+                    <a href="/login" class="nav-link">
+                        <span class="nav-icon">🔐</span>
+                        <span class="nav-text">Connexion</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="about">
+                        <span class="nav-icon">📖</span>
+                        <span class="nav-text">À Propos</span>
+                    </NavLink>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
     </nav>
 </div>
 
 @code {
-    /// <summary>
-    /// État de repli du menu de navigation (pour responsive mobile)
-    /// true = menu replié, false = menu déplié
-    /// </summary>
-    private bool collapseNavMenu = true;
-
-    /// <summary>
-    /// Propriété calculée qui retourne la classe CSS pour le repli du menu
-    /// </summary>
-    /// <returns>"collapse" si le menu doit être replié, null sinon</returns>
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    /// <summary>
-    /// Basculle l'état d'affichage du menu de navigation
-    /// Utilisé par le bouton hamburger sur mobile
-    /// </summary>
-    private void ToggleNavMenu()
+    private async Task Logout()
     {
-        collapseNavMenu = !collapseNavMenu;
+        // Cast vers CustomAuthStateProvider pour accéder à la méthode Logout
+        if (AuthStateProvider is CustomAuthStateProvider customProvider)
+        {
+            await customProvider.Logout();
+            Navigation.NavigateTo("/login", true);
+        }
+        else
+        {
+            // Fallback - supprimer le token manuellement
+            await TokenService.RemoveTokenAsync();
+            Navigation.NavigateTo("/login", true);
+        }
     }
 }
+
+<style>
+/* ========= NAVIGATION MÉDIÉVALE - VERSION NETTOYÉE ========= */
+
+/* Barre du haut supprimée */
+.game-navbar {
+    display: none;
+}
+
+/* ========= SIDEBAR PRINCIPALE ========= */
+.game-sidebar {
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 280px; 
+    height: 100vh;
+    background: linear-gradient(180deg, #2d1b0e 0%, #1a1008 50%, #0f0804 100%);
+    border-right: 8px solid #8b4513;
+    border-image: 
+        repeating-linear-gradient(90deg, 
+            #8b4513 0px, #8b4513 4px,
+            #654321 4px, #654321 8px,
+            #8b4513 8px, #8b4513 12px
+        ) 8;
+    box-shadow: 
+        inset -4px 0 0 #654321,
+        4px 0 8px rgba(0, 0, 0, 0.6),
+        inset 0 0 20px rgba(0, 0, 0, 0.3);
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+}
+
+.game-sidebar.collapse { 
+    display: none; 
+}
+
+/* Scrollbar personnalisée */
+.game-sidebar::-webkit-scrollbar {
+    width: 16px;
+}
+.game-sidebar::-webkit-scrollbar-track {
+    background: #2d1b0e;
+    border: 2px solid #654321;
+}
+.game-sidebar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #8b4513, #654321);
+    border: 1px solid #d4af37;
+}
+.game-sidebar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #d4af37, #8b4513);
+}
+
+/* ========= SECTION ADMIN ========= */
+.admin-section {
+    border: 2px solid #d4af37;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #4a2c17 0%, #3d2314 100%);
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+}
+
+.admin-section .nav-title {
+    color: #d4af37 !important;
+    text-shadow: 0 0 5px rgba(212, 175, 55, 0.8);
+}
+
+.admin-link {
+    background: linear-gradient(135deg, #5d3a1f 0%, #4a2c17 100%);
+    border: 1px solid #d4af37;
+}
+
+.admin-link:hover,
+.admin-link.active {
+    background: linear-gradient(135deg, #d4af37 0%, #b8941f 100%);
+    color: #2d1b0e !important;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.6);
+}
+
+.admin-link:hover .nav-icon,
+.admin-link.active .nav-icon,
+.admin-link:hover .nav-text,
+.admin-link.active .nav-text {
+    color: #2d1b0e !important;
+}
+
+/* ========= NAVIGATION ========= */
+.game-nav { 
+    padding: 1rem 0; 
+    background: 
+        repeating-linear-gradient(90deg, 
+            rgba(139, 69, 19, 0.1) 0px, rgba(139, 69, 19, 0.1) 2px,
+            transparent 2px, transparent 4px
+        );
+}
+
+/* Sections de navigation */
+.nav-section { 
+    margin-bottom: 1.5rem; 
+    padding: 0 0.8rem 1rem 0.8rem; 
+    border-bottom: 2px dashed #654321;
+}
+
+.nav-section:last-child { 
+    border-bottom: none; 
+}
+
+/* Titres des sections */
+.nav-title {
+    color: #d4af37;
+    font-size: 1rem; 
+    font-weight: bold;
+    margin: 0.5rem 0.8rem 1rem 0.8rem; 
+    text-transform: uppercase; 
+    letter-spacing: 2px;
+    padding: 0.8rem 1rem;
+    background: linear-gradient(90deg, #8b4513, #654321);
+    border: 2px solid #d4af37;
+    text-shadow: none;
+    box-shadow: 
+        inset 2px 2px 0px rgba(212, 175, 55, 0.3),
+        2px 2px 0px #000;
+    font-family: 'Courier New', monospace;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* ========= LIENS DE NAVIGATION ========= */
+.nav-item {
+    margin-bottom: 0.3rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.2rem;
+    margin: 0.3rem 0.8rem;
+    color: #ffd700;
+    text-decoration: none;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    background: linear-gradient(90deg, #3c2414, #2d1b0e);
+    border: 2px solid #654321;
+    border-left: 4px solid #8b4513;
+    text-shadow: none;
+    box-shadow: 
+        inset 1px 1px 0px rgba(212, 175, 55, 0.2),
+        1px 1px 0px #000;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+/* État hover */
+.nav-link:hover:not(.active) {
+    background: linear-gradient(90deg, #8b4513, #654321);
+    color: #fff;
+    border-color: #d4af37;
+    box-shadow: 
+        inset 2px 2px 0px rgba(255, 215, 0, 0.3),
+        2px 2px 0px #000,
+        0 0 10px rgba(212, 175, 55, 0.4);
+}
+
+.nav-link:hover:not(.active) * {
+    color: #fff;
+}
+
+/* État actif */
+.nav-link.active {
+    background: linear-gradient(90deg, #d4af37, #b8941f);
+    color: #fff;
+    border-color: #ffd700;
+    border-left: 6px solid #ffd700;
+    font-weight: bold;
+    box-shadow: 
+        inset 2px 2px 0px rgba(255, 255, 255, 0.3),
+        2px 2px 0px #000,
+        0 0 15px rgba(212, 175, 55, 0.6);
+    text-shadow: none;
+}
+
+.nav-link.active * {
+    color: #fff !important;
+    text-shadow: none !important;
+}
+
+/* ========= ÉLÉMENTS DES LIENS ========= */
+.nav-icon {
+    font-size: 1.8rem;
+    margin-right: 1rem;
+    width: 32px;
+    text-align: center;
+    filter: drop-shadow(2px 2px 0px #000);
+    flex-shrink: 0;
+}
+
+.nav-text {
+    font-size: 0.9rem;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+    font-weight: bold;
+    white-space: nowrap;
+    flex: 1;
+    color: #ffd700;
+    text-shadow: none;
+}
+
+/* ========= STATISTIQUES DU JEU ========= */
+.game-stats { 
+    background: linear-gradient(135deg, #1a1008, #0f0804);
+    padding: 1.2rem; 
+    margin: 1rem 1rem 0.8rem 1rem;
+    border: 3px solid #8b4513;
+    border-top: 3px solid #d4af37;
+    box-shadow: 
+        inset 2px 2px 0px rgba(212, 175, 55, 0.2),
+        inset -2px -2px 0px rgba(0, 0, 0, 0.8),
+        2px 2px 0px #000;
+    font-family: 'Courier New', monospace;
+}
+
+.stat-item { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    padding: 0.5rem 0; 
+    border-bottom: 1px dashed #654321; 
+}
+.stat-item:last-child { 
+    border-bottom: none; 
+}
+
+.stat-label { 
+    color: #c9b037; 
+    font-size: 0.8rem; 
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: none;
+}
+
+.stat-value { 
+    color: #ffd700; 
+    font-weight: bold; 
+    font-size: 0.9rem;
+    text-shadow: none;
+    background: linear-gradient(90deg, #8b4513, #654321);
+    padding: 0.2rem 0.5rem;
+    border: 1px solid #d4af37;
+}
+</style>

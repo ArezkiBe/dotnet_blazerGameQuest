@@ -1,0 +1,727 @@
+@page "/admin/export"
+@using SharedModels.Models
+@using System.Text.Json
+@using System.Text
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IGameApiService GameApi
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Export des Données - BlazorGameQuest Admin</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        @{
+            var isAdmin = IsUserAdmin(context.User);
+        }
+        @if (!isAdmin)
+{
+    <div class="access-denied">
+        <h2>🚫 Accès Refusé</h2>
+        <p>Vous devez être administrateur pour accéder à cette page.</p>
+        <button class="btn btn-primary" @onclick='() => Navigation.NavigateTo("/")'>
+            Retour à l'accueil
+        </button>
+    </div>
+}
+else
+{
+    <div class="export-page">
+        <div class="page-header">
+            <h1>📊 Export des Données</h1>
+            <button class="back-btn" @onclick='() => Navigation.NavigateTo("/admin")'>
+                ← Retour au Dashboard
+            </button>
+        </div>
+
+        <div class="export-options">
+            <!-- Players Export -->
+            <div class="export-card">
+                <div class="export-header">
+                    <div class="export-icon">👥</div>
+                    <h3>Données des Joueurs</h3>
+                </div>
+                <p>Exporter la liste complète des joueurs avec leurs informations de base et statistiques.</p>
+                
+                <div class="export-format">
+                    <label>Format:</label>
+                    <select @bind="playersFormat">
+                        <option value="json">JSON</option>
+                        <option value="csv">CSV</option>
+                    </select>
+                </div>
+                
+                <div class="export-options-list">
+                    <label class="checkbox-label">
+                        <input type="checkbox" @bind="includeInactivePlayers" />
+                        Inclure les joueurs inactifs
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" @bind="includeEmails" />
+                        Inclure les emails
+                    </label>
+                </div>
+
+                <button class="export-btn" @onclick="ExportPlayers" disabled="@isExporting">
+                    @if (isExporting)
+                    {
+                        <text>⏳ Export en cours...</text>
+                    }
+                    else
+                    {
+                        <text>📥 Télécharger les Joueurs</text>
+                    }
+                </button>
+            </div>
+
+            <!-- Leaderboard Export -->
+            <div class="export-card">
+                <div class="export-header">
+                    <div class="export-icon">🏆</div>
+                    <h3>Classement</h3>
+                </div>
+                <p>Exporter le classement des joueurs trié par score avec les rangs.</p>
+                
+                <div class="export-format">
+                    <label>Format:</label>
+                    <select @bind="leaderboardFormat">
+                        <option value="json">JSON</option>
+                        <option value="csv">CSV</option>
+                    </select>
+                </div>
+                
+                <div class="export-options-list">
+                    <label class="checkbox-label">
+                        <input type="checkbox" @bind="topPlayersOnly" />
+                        Top 20 seulement
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" @bind="includeGameSessions" />
+                        Inclure le nombre de parties
+                    </label>
+                </div>
+
+                <button class="export-btn" @onclick="ExportLeaderboard" disabled="@isExporting">
+                    @if (isExporting)
+                    {
+                        <text>⏳ Export en cours...</text>
+                    }
+                    else
+                    {
+                        <text>📥 Télécharger le Classement</text>
+                    }
+                </button>
+            </div>
+
+            <!-- Statistics Export -->
+            <div class="export-card">
+                <div class="export-header">
+                    <div class="export-icon">📈</div>
+                    <h3>Statistiques Globales</h3>
+                </div>
+                <p>Exporter un résumé des statistiques globales de l'application.</p>
+                
+                <div class="export-format">
+                    <label>Format:</label>
+                    <select @bind="statsFormat">
+                        <option value="json">JSON</option>
+                        <option value="csv">CSV</option>
+                    </select>
+                </div>
+
+                <button class="export-btn" @onclick="ExportStatistics" disabled="@isExporting">
+                    @if (isExporting)
+                    {
+                        <text>⏳ Export en cours...</text>
+                    }
+                    else
+                    {
+                        <text>📥 Télécharger les Statistiques</text>
+                    }
+                </button>
+            </div>
+        </div>
+
+        <!-- Export History -->
+        @if (exportHistory.Any())
+        {
+            <div class="export-history">
+                <h2>📋 Historique des Exports</h2>
+                <div class="history-list">
+                    @foreach (var export in exportHistory.Take(10))
+                    {
+                        <div class="history-item">
+                            <div class="history-info">
+                                <strong>@export.Type</strong>
+                                <span class="history-format">@export.Format.ToUpper()</span>
+                            </div>
+                            <div class="history-date">@export.Date.ToString("dd/MM/yyyy à HH:mm")</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(statusMessage))
+        {
+            <div class="status-message @(isError ? "error" : "success")">
+                @statusMessage
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private bool isExporting = false;
+    private string statusMessage = "";
+    private bool isError = false;
+
+    // Export format options
+    private string playersFormat = "json";
+    private string leaderboardFormat = "json";
+    private string statsFormat = "json";
+
+    // Export options
+    private bool includeInactivePlayers = false;
+    private bool includeEmails = true;
+    private bool topPlayersOnly = false;
+    private bool includeGameSessions = true;
+
+    // Export history
+    private List<ExportRecord> exportHistory = new();
+
+    public class ExportRecord
+    {
+        public string Type { get; set; } = "";
+        public string Format { get; set; } = "";
+        public DateTime Date { get; set; }
+    }
+
+    private bool IsUserAdmin(System.Security.Claims.ClaimsPrincipal? user)
+    {
+        if (user == null) return false;
+        
+        // Pour le développement, considérons que l'utilisateur "admin" est admin
+        var username = user.FindFirst("preferred_username")?.Value ?? "";
+        if (username.ToLower() == "admin") return true;
+        
+        // Vérification des rôles standard
+        return user.IsInRole("admin") || user.IsInRole("administrator");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (!IsUserAdmin(authState.User))
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+    }
+
+    private async Task ExportPlayers()
+    {
+        try
+        {
+            isExporting = true;
+            statusMessage = "";
+            StateHasChanged();
+
+            var players = await GameApi.GetPlayersAsync();
+            var users = await GameApi.GetUsersAsync();
+
+            // Filter players based on options
+            var playerData = players.Select(p => new
+            {
+                p.Id,
+                p.Username,
+                Email = includeEmails ? users.FirstOrDefault(u => u.Id == p.UserId)?.Email : "***",
+                p.Score,
+                p.CurrentRoom,
+                CreatedAt = p.CreatedAt.ToString("yyyy-MM-dd"),
+                IsActive = users.FirstOrDefault(u => u.Id == p.UserId)?.IsActive ?? false
+            });
+
+            if (!includeInactivePlayers)
+            {
+                playerData = playerData.Where(p => p.IsActive);
+            }
+
+            var data = playerData.ToList();
+            var filename = $"players_{DateTime.Now:yyyyMMdd_HHmmss}";
+
+            if (playersFormat == "json")
+            {
+                await DownloadJsonFile(data, $"{filename}.json");
+            }
+            else
+            {
+                await DownloadCsvFile(data, $"{filename}.csv");
+            }
+
+            exportHistory.Insert(0, new ExportRecord
+            {
+                Type = "Joueurs",
+                Format = playersFormat,
+                Date = DateTime.Now
+            });
+
+            statusMessage = $"Export des joueurs réussi! {data.Count} entrées exportées.";
+            isError = false;
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Erreur lors de l'export: {ex.Message}";
+            isError = true;
+        }
+        finally
+        {
+            isExporting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ExportLeaderboard()
+    {
+        try
+        {
+            isExporting = true;
+            statusMessage = "";
+            StateHasChanged();
+
+            var players = await GameApi.GetPlayersAsync();
+            var users = await GameApi.GetUsersAsync();
+
+            var leaderboardData = players
+                .OrderByDescending(p => p.Score)
+                .Select((p, index) => new
+                {
+                    Rank = index + 1,
+                    p.Username,
+                    p.Score,
+                    GameSessions = includeGameSessions ? (p.GameSessions?.Count ?? 0) : 0,
+                    IsActive = users.FirstOrDefault(u => u.Id == p.UserId)?.IsActive ?? false
+                });
+
+            if (topPlayersOnly)
+            {
+                leaderboardData = leaderboardData.Take(20);
+            }
+
+            var data = leaderboardData.ToList();
+            var filename = $"leaderboard_{DateTime.Now:yyyyMMdd_HHmmss}";
+
+            if (leaderboardFormat == "json")
+            {
+                await DownloadJsonFile(data, $"{filename}.json");
+            }
+            else
+            {
+                await DownloadCsvFile(data, $"{filename}.csv");
+            }
+
+            exportHistory.Insert(0, new ExportRecord
+            {
+                Type = "Classement",
+                Format = leaderboardFormat,
+                Date = DateTime.Now
+            });
+
+            statusMessage = $"Export du classement réussi! {data.Count} entrées exportées.";
+            isError = false;
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Erreur lors de l'export: {ex.Message}";
+            isError = true;
+        }
+        finally
+        {
+            isExporting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ExportStatistics()
+    {
+        try
+        {
+            isExporting = true;
+            statusMessage = "";
+            StateHasChanged();
+
+            var players = await GameApi.GetPlayersAsync();
+            var users = await GameApi.GetUsersAsync();
+
+            var stats = new
+            {
+                ExportDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                TotalPlayers = players.Count,
+                ActivePlayers = users.Count(u => u.IsActive && u.Role == UserRole.Player),
+                InactivePlayers = users.Count(u => !u.IsActive && u.Role == UserRole.Player),
+                TotalScore = players.Sum(p => p.Score),
+                AverageScore = players.Any() ? (int)players.Average(p => p.Score) : 0,
+                TopScore = players.Any() ? players.Max(p => p.Score) : 0,
+                TopPlayer = players.OrderByDescending(p => p.Score).FirstOrDefault()?.Username ?? "N/A",
+                TotalGameSessions = players.Sum(p => p.GameSessions?.Count ?? 0)
+            };
+
+            var filename = $"statistics_{DateTime.Now:yyyyMMdd_HHmmss}";
+
+            if (statsFormat == "json")
+            {
+                await DownloadJsonFile(stats, $"{filename}.json");
+            }
+            else
+            {
+                // For CSV, convert to a list of key-value pairs
+                var csvData = new[]
+                {
+                    new { Metric = "Date d'export", Value = stats.ExportDate },
+                    new { Metric = "Joueurs total", Value = stats.TotalPlayers.ToString() },
+                    new { Metric = "Joueurs actifs", Value = stats.ActivePlayers.ToString() },
+                    new { Metric = "Joueurs inactifs", Value = stats.InactivePlayers.ToString() },
+                    new { Metric = "Score total", Value = stats.TotalScore.ToString() },
+                    new { Metric = "Score moyen", Value = stats.AverageScore.ToString() },
+                    new { Metric = "Meilleur score", Value = stats.TopScore.ToString() },
+                    new { Metric = "Meilleur joueur", Value = stats.TopPlayer },
+                    new { Metric = "Parties totales", Value = stats.TotalGameSessions.ToString() }
+                };
+
+                await DownloadCsvFile(csvData, $"{filename}.csv");
+            }
+
+            exportHistory.Insert(0, new ExportRecord
+            {
+                Type = "Statistiques",
+                Format = statsFormat,
+                Date = DateTime.Now
+            });
+
+            statusMessage = "Export des statistiques réussi!";
+            isError = false;
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Erreur lors de l'export: {ex.Message}";
+            isError = true;
+        }
+        finally
+        {
+            isExporting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DownloadJsonFile(object data, string filename)
+    {
+        var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
+        var bytes = Encoding.UTF8.GetBytes(json);
+        await JSRuntime.InvokeVoidAsync("downloadFile", filename, "application/json", bytes);
+    }
+
+    private async Task DownloadCsvFile(object data, string filename)
+    {
+        var csv = ConvertToCsv(data);
+        var bytes = Encoding.UTF8.GetBytes(csv);
+        await JSRuntime.InvokeVoidAsync("downloadFile", filename, "text/csv", bytes);
+    }
+
+    /// <summary>
+    /// Convertit une liste d'objets en format CSV conforme RFC 4180
+    /// Utilise la réflexion pour extraire les propriétés et leurs valeurs
+    /// Gère l'échappement des virgules et guillemets selon les règles CSV
+    /// </summary>
+    private string ConvertToCsv(object data)
+    {
+        var sb = new StringBuilder();
+        
+        if (data is IEnumerable<object> list && list.Any())
+        {
+            // Utilise le premier élément pour déterminer la structure (propriétés)
+            var first = list.First();
+            var properties = first.GetType().GetProperties();
+            
+            // Ligne d'en-tête : noms des propriétés séparés par des virgules
+            sb.AppendLine(string.Join(",", properties.Select(p => p.Name)));
+            
+            // Lignes de données : une ligne par objet
+            foreach (var item in list)
+            {
+                var values = properties.Select(p => 
+                {
+                    var value = p.GetValue(item)?.ToString() ?? "";
+                    
+                    // Échappement CSV conforme RFC 4180 :
+                    // - Si la valeur contient une virgule ou un guillemet, on l'entoure de guillemets
+                    // - Les guillemets à l'intérieur sont doublés ("" pour échapper ")
+                    if (value.Contains(",") || value.Contains("\""))
+                    {
+                        value = "\"" + value.Replace("\"", "\"\"") + "\"";
+                    }
+                    return value;
+                });
+                sb.AppendLine(string.Join(",", values));
+            }
+        }
+        
+        return sb.ToString();
+    }
+        }
+    </Authorized>
+    <NotAuthorized>
+        <div class="access-denied">
+            <h2>🚫 Accès Refusé</h2>
+            <p>Vous devez être connecté pour accéder à cette page.</p>
+            <a href="/login" class="btn btn-primary">Se connecter</a>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+<style>
+.export-page {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    min-height: 100vh;
+    color: white;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    color: #1a1a2e;
+    border-radius: 12px;
+}
+
+.page-header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+.back-btn {
+    background: #1a1a2e;
+    color: #ffd700;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.export-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.export-card {
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+    border: 2px solid #ffd700;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease;
+}
+
+.export-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+}
+
+.export-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.export-icon {
+    font-size: 2.5rem;
+    margin-right: 1rem;
+    color: #ffd700;
+}
+
+.export-header h3 {
+    margin: 0;
+    color: #ffd700;
+    font-size: 1.4rem;
+}
+
+.export-card p {
+    margin-bottom: 1.5rem;
+    color: #e2e8f0;
+    line-height: 1.4;
+}
+
+.export-format {
+    margin-bottom: 1rem;
+}
+
+.export-format label {
+    display: block;
+    color: #ffd700;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.export-format select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 2px solid #4a5568;
+    border-radius: 4px;
+    background: #1a1a2e;
+    color: white;
+}
+
+.export-options-list {
+    margin-bottom: 1.5rem;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    color: #e2e8f0;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-right: 0.5rem;
+    transform: scale(1.2);
+}
+
+.export-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    color: #1a1a2e;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.export-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+}
+
+.export-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.export-history {
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+    border: 2px solid #ffd700;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.export-history h2 {
+    color: #ffd700;
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 215, 0, 0.1);
+    border-radius: 6px;
+    padding: 0.75rem;
+    border-left: 4px solid #ffd700;
+}
+
+.history-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.history-format {
+    background: #ffd700;
+    color: #1a1a2e;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+.history-date {
+    color: #a0aec0;
+    font-size: 0.8rem;
+}
+
+.status-message {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 6px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.status-message.success {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    border: 1px solid #22c55e;
+}
+
+.status-message.error {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid #ef4444;
+}
+
+.access-denied {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.access-denied h2 {
+    color: #ef4444;
+    margin-bottom: 1rem;
+}
+
+.access-denied p {
+    margin-bottom: 1rem;
+    color: #a0aec0;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    color: #1a1a2e;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+}
+</style>

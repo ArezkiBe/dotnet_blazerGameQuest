@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DataAccess.Data;
 using SharedModels.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GameAPI.Controllers;
 
@@ -12,6 +13,7 @@ namespace GameAPI.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Tags("Rooms")]
+[Authorize] // Utilisateurs authentifiés
 public class RoomsController : ControllerBase
 {
     private readonly GameDbContext _context;
@@ -71,7 +73,11 @@ public class RoomsController : ControllerBase
         return Ok(rooms);
     }
 
+    /// <summary>
+    /// Crée une nouvelle salle (admin seulement)
+    /// </summary>
     [HttpPost]
+    [Authorize(Roles = "administrateur")]
     public async Task<ActionResult<Room>> CreateRoom(Room room)
     {
         _context.Rooms.Add(room);
@@ -80,7 +86,11 @@ public class RoomsController : ControllerBase
         return CreatedAtAction(nameof(GetRoom), new { id = room.Id }, room);
     }
 
+    /// <summary>
+    /// Met à jour une salle existante (admin seulement)
+    /// </summary>
     [HttpPut("{id}")]
+    [Authorize(Roles = "administrateur")]
     public async Task<IActionResult> UpdateRoom(int id, Room room)
     {
         if (id != room.Id)
@@ -91,7 +101,11 @@ public class RoomsController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Supprime une salle (admin seulement)
+    /// </summary>
     [HttpDelete("{id}")]
+    [Authorize(Roles = "administrateur")]
     public async Task<IActionResult> DeleteRoom(int id)
     {
         var room = await _context.Rooms.FindAsync(id);

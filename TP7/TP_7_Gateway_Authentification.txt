@@ -1,0 +1,40 @@
+# Gateway et Authentification OIDC
+
+
+## Objectif du TP
+Implementer une Gateway (reverse proxy) en c#.
+Configurer Keycloak
+Protéger les pages pour des utilisateurs authentifiés.
+
+## Activité 1
+
+- Créer une solution "GatewayAuthent.sln"
+- Créer une webAPI ".\WeatherAPI\"
+- Modifier le chemin d'accès à l'API Minimaliste par /api/weather/...
+- Créer un projet web (gateway) "ApiGateway" (dotnet new web -n ApiGateway)
+- Configurer Yarp.reverseproxy
+- Faire tourner la gateway sur le port 5000 en Http
+- Configurer la redirection vers le Micro service WeatherAPI\
+- Faire un test dans le navigateur en appellant l'API Minimaliste "weatherforecast" après avoir lancé les deux composants.
+- Faire le même test en utilisant "Postman".
+
+
+## Activité 2
+
+- Télécharger le projet BlazorAPP et les fichiers "Dockerfile" et "docker-compose.yml" sous moodle.
+- Ajouter le projet BlazorApp dans votre solution
+- En vous basant du lien suivant : https://medium.com/@faulycoelho/net-web-api-with-keycloak-11e0286240b9 configurer Keycloack (qui tournera sous docker) et comme recommandé utilisez "Docker desktop"
+pour que votre page de connexion fonctionne.
+ Avec : 
+  * Deux utilisateurs ayant pour rôle "player" ou "joueur" et pour  login "user1" et "user2" et pour mot de passe "1234".
+  * Un administrateur ayant pour rôle "administrateur" et pour login "useradmin" et mot de passe "1234"
+- Ensuite protégez l'APi minimaliste et protéger la page weather pour qu'elle soit accessible uniquement par un utilisateur authentifié.
+- Refaire vos tests
+
+
+## Activité 3
+
+- Ajoutez des fichiers DockerFile dans tous vos projets "sauf votre projet Blazor" pour le déploiement sous docker
+- Déployez vos projets dans votre "Docker Desktop"
+- Faire vos tests depuis votre IHM
+

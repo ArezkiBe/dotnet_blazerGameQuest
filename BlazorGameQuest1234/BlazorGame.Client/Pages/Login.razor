@@ -1,0 +1,246 @@
+@page "/login"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [AllowAnonymous]
+@inject NavigationManager Navigation
+@inject ITokenService TokenService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime _jsRuntime
+
+<div class="login-container">
+    <div class="login-card">
+        <h2>🏰 BlazorGameQuest</h2>
+        <h3>Connexion</h3>
+        
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger">
+                @errorMessage
+            </div>
+        }
+
+        <div class="login-form">
+            <button class="btn btn-primary login-btn" @onclick="LoginWithKeycloakRedirect" disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                🌐 Se connecter avec Keycloak
+            </button>
+            
+            <button class="btn btn-outline-warning login-btn" @onclick="ForceLogout" disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                🔄 Forcer déconnexion complète
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        font-family: 'Courier New', monospace;
+    }
+
+    .login-card {
+        background: linear-gradient(135deg, #2d1b0e 0%, #1a1008 100%);
+        border: 4px solid #d4af37;
+        border-radius: 0;
+        padding: 3rem;
+        box-shadow: 
+            inset 2px 2px 0px rgba(212, 175, 55, 0.3),
+            inset -2px -2px 0px rgba(0, 0, 0, 0.8),
+            8px 8px 0px #000,
+            0 0 30px rgba(212, 175, 55, 0.3);
+        text-align: center;
+        max-width: 500px;
+        width: 100%;
+        color: #ffd700;
+    }
+
+    .login-card h2 {
+        color: #ffd700;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        letter-spacing: 2px;
+    }
+
+    .login-card h3 {
+        color: #d4af37;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        margin-bottom: 1.5rem;
+        font-size: 1.3rem;
+    }
+
+    .login-btn {
+        width: 100%;
+        padding: 15px;
+        font-size: 1.2rem;
+        border: 3px solid #8b4513;
+        border-radius: 0;
+        margin: 1rem 0;
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        background: linear-gradient(180deg, #d4af37 0%, #aa8a2e 100%);
+        color: #1a1a2e;
+        box-shadow: 
+            inset 1px 1px 0px rgba(255, 255, 255, 0.3),
+            inset -1px -1px 0px rgba(0, 0, 0, 0.5),
+            3px 3px 0px #000;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .login-btn:hover:not(:disabled) {
+        background: linear-gradient(180deg, #ffd700 0%, #d4af37 100%);
+        transform: translate(-2px, -2px);
+        box-shadow: 
+            inset 1px 1px 0px rgba(255, 255, 255, 0.3),
+            inset -1px -1px 0px rgba(0, 0, 0, 0.5),
+            5px 5px 0px #000;
+    }
+
+    .login-btn:active:not(:disabled) {
+        transform: translate(1px, 1px);
+        box-shadow: 
+            inset 1px 1px 0px rgba(0, 0, 0, 0.5),
+            2px 2px 0px #000;
+    }
+
+    .btn-outline-warning {
+        background: linear-gradient(180deg, #8b4513 0%, #654321 100%);
+        color: #ffd700;
+        border: 3px solid #654321;
+    }
+
+    .btn-outline-warning:hover:not(:disabled) {
+        background: linear-gradient(180deg, #654321 0%, #4a2c0f 100%);
+        color: #ffd700;
+    }
+
+    .form-group {
+        margin: 1rem 0;
+        text-align: left;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .form-control:disabled {
+        background-color: #f5f5f5;
+    }
+
+    hr {
+        margin: 1.5rem 0;
+        border: none;
+        height: 1px;
+        background: #ddd;
+    }
+
+    .spinner-border-sm {
+        width: 0.875rem;
+        height: 0.875rem;
+    }
+
+    .test-credentials {
+        margin-top: 1.5rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        font-size: 0.9rem;
+    }
+
+    .test-credentials ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .test-credentials li {
+        margin: 0.5rem 0;
+    }
+</style>
+
+@code {
+    private string? errorMessage;
+    private bool isLoading = false;
+
+    private async Task LoginWithKeycloakRedirect()
+    {
+        try
+        {
+            isLoading = true;
+            
+            // Supprimer le token local d'abord
+            await TokenService.RemoveTokenAsync();
+            
+            // Redirection vers Keycloak en forçant la saisie du mot de passe
+            var keycloakLoginUrl = "http://localhost:8180/realms/blazor-gamequest/protocol/openid-connect/auth" +
+                "?client_id=blazor-client" +
+                "&response_type=code" +
+                "&redirect_uri=" + Uri.EscapeDataString("http://localhost:5000/callback") +
+                "&scope=openid" +
+                "&prompt=login";
+
+            Navigation.NavigateTo(keycloakLoginUrl, forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors de la redirection : {ex.Message}";
+            isLoading = false;
+        }
+    }
+
+    private async Task ForceLogout()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = "Déconnexion en cours...";
+            StateHasChanged();
+            
+            // Supprimer le token local
+            await TokenService.RemoveTokenAsync();
+            
+            // Redirection directe vers l'endpoint de déconnexion Keycloak
+            // qui va nettoyer la session et revenir sur la page de login
+            var logoutUrl = "http://localhost:8180/realms/blazor-gamequest/protocol/openid-connect/logout" +
+                "?client_id=blazor-client" +
+                "&post_logout_redirect_uri=" + Uri.EscapeDataString("http://localhost:5000/login");
+            
+            Navigation.NavigateTo(logoutUrl, forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors de la déconnexion : {ex.Message}";
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+}

@@ -1,91 +1,154 @@
-# BlazorGameQuest
+# 🎮 BlazorGameQuest
 
-**Membres du groupe :** Arezki BEGGAR, Ilyas HADJADJ
+**Arezki BEGGAR, Ilyas HADJADJ** - EFREI Paris S7 .NET - 2024
 
 ## Description
 
-Jeu d'aventure Blazor WebAssembly avec API .NET 9. Le joueur explore des donjons générés aléatoirement avec système de score et progression RPG.
+Jeu d'aventure RPG en Blazor WebAssembly avec architecture microservices, authentification Keycloak et API Gateway YARP.
+
+**Fonctionnalités:** Donjons procéduraux, combats tour par tour, système RPG (HP/Mana/XP), classement, gestion des rôles.
 
 ## Architecture
 
 ```
-BlazorGameQuest1234/
-├── BlazorGame.Client/          # Frontend Blazor WebAssembly
-├── GameAPI/                   # API REST avec CRUD
-├── SharedModels/              # Modèles de données partagés
-├── DataAccess/                # Entity Framework Core
-└── BlazorGameQuest.Tests/     # Tests unitaires (35 tests)
+Client (localhost:5000) → ApiGateway (YARP) → GameAPI + BlazorClient
+                                ↓
+                            Keycloak (8180)
+                            PostgreSQL/InMemory
 ```
 
-## Technologies
+**Composants:**
+- **ApiGateway** (Port 5000 HTTP) - Point d'entrée unique
+- **GameAPI** (Port interne 5001) - API REST + EF Core
+- **BlazorGame.Client** (Port interne 80) - Frontend WebAssembly
+- **Keycloak** (Port 8180) - Authentification OpenID Connect
 
-- .NET 9, Entity Framework Core, ASP.NET Web API
-- Blazor WebAssembly, Swagger/OpenAPI
-- xUnit, PostgreSQL/InMemory
+## 🚀 Démarrage Rapide
 
-## Fonctionnalités
+### Prérequis
+- Docker Desktop
+- Ports disponibles: 5000, 8180
 
-- **Génération procédurale** : Donjons de 5 salles avec défis variés
-- **Système RPG** : HP, XP, niveaux, statistiques de combat
-- **Actions multiples** : Combat, fuite, fouille, repos, investigation
-- **Calcul de score** : Points basés sur performance et difficulté
-- **Persistance** : Sauvegarde automatique des scores
+### Installation
 
-## API Endpoints
-
-```
-# Jeu
-POST /api/game/start-adventure
-GET /api/game/session/{id}
-POST /api/game/session/{id}/action
-POST /api/game/session/{id}/next-room
-
-# CRUD
-GET/POST/PUT/DELETE /api/users
-GET/POST/PUT/DELETE /api/players
-GET/POST/PUT/DELETE /api/dungeons
+```powershell
+cd BlazorGameQuest1234
+docker-compose up -d
 ```
 
-## Installation et Lancement
+### Configuration Keycloak (première utilisation)
 
-**Prérequis :** .NET 9 SDK
+1. Accéder à http://localhost:8180
+2. Se connecter avec **admin/admin**
+3. Créer le realm **blazor-gamequest**
+4. Créer le client **blazor-client**
+5. Créer les utilisateurs (voir tableau ci-dessous)
 
-**Ports :**
-- Frontend : http://localhost:5000
-- API : http://localhost:5215
-- Documentation : http://localhost:5215/swagger
+**Voir détails:** [KEYCLOAK_SETUP.md](BlazorGameQuest1234/KEYCLOAK_SETUP.md)
 
-```bash
-# Terminal 1 - API
-cd BlazorGameQuest1234/GameAPI
-dotnet run
+### Comptes de test
 
-# Terminal 2 - Client
-cd BlazorGameQuest1234/BlazorGame.Client
-dotnet run
+| Utilisateur | Mot de passe | Rôle | Accès |
+|-------------|--------------|------|-------|
+| user1 | 1234 | joueur | Jeu uniquement |
+| user2 | 1234 | joueur | Jeu uniquement |
+| admin | admin | administrateur | Dashboard + Gestion complète |
+
+### Accès
+
+- **Application:** http://localhost:5000 (seul point d'entrée)
+- **Keycloak Admin:** http://localhost:8180
+- **Swagger API:** http://localhost:5000/swagger
+
+## 🎮 Utilisation
+
+1. Ouvrir http://localhost:5000
+2. Se connecter avec un compte (user1/1234 ou admin/admin)
+3. "Nouvelle aventure" → Choisir difficulté
+4. Explorer le donjon (5 salles)
+5. Actions: Attaquer, Fuir, Fouiller, Se reposer
+
+## 🔐 Tester les API
+
+### Obtenir un token JWT
+
+```powershell
+# Via script PowerShell
+.\scripts\get-token-simple.ps1 admin
+
+# Ou manuellement
+$response = Invoke-RestMethod -Uri "http://localhost:8180/realms/blazor-gamequest/protocol/openid-connect/token" `
+  -Method Post -ContentType "application/x-www-form-urlencoded" `
+  -Body @{client_id="blazor-client"; username="admin"; password="admin"; grant_type="password"}
+$response.access_token | Set-Clipboard
 ```
 
-## Tests
+### Utiliser dans Swagger
 
-```bash
-# Exécuter les tests
+1. Ouvrir http://localhost:5000/swagger
+2. Cliquer **Authorize** 🔒
+3. Coller le token (sans "Bearer ")
+4. Tester les endpoints
+
+**Voir détails:** [SWAGGER_AUTHENTICATION_GUIDE.md](BlazorGameQuest1234/SWAGGER_AUTHENTICATION_GUIDE.md)
+
+## 🧪 Tests
+
+```powershell
+cd BlazorGameQuest1234
 dotnet test
-
-# Avec couverture
-dotnet test --collect:"XPlat Code Coverage"
+# 49 tests unitaires - Couverture 40%
 ```
 
-**Résultats :** 35 tests passent - Services (DungeonGenerator, GameSession) et Contrôleurs (Users, Players, Dungeons, Rooms)
+## 📚 Technologies
 
-## Utilisation
+- **.NET 9** - Framework
+- **Blazor WebAssembly** - Frontend
+- **ASP.NET Core Web API** - Backend
+- **YARP** - API Gateway
+- **Keycloak 21.1.1** - Authentification
+- **EF Core 9** - ORM
+- **PostgreSQL/InMemory** - Base de données
+- **xUnit** - Tests
+- **Docker** - Conteneurisation
 
-1. Démarrer API et client
-2. Ouvrir http://localhost:5000
-3. Sélectionner joueur et difficulté
-4. Explorer 5 salles générées aléatoirement
-5. Choisir actions : Combat, Fuite, Fouille, Repos
-6. Consulter score final sauvegardé
+## 🛠️ Commandes Docker
+
+```powershell
+# Démarrer
+docker-compose up -d
+
+# Arrêter
+docker-compose down
+
+# Logs
+docker-compose logs -f
+
+# Rebuild
+docker-compose up --build -d
+```
+
+## 🐛 Dépannage
+
+**Erreur 401 sur Swagger:** Token expiré (5 min) → Récupérer nouveau token  
+**Keycloak inaccessible:** Attendre 1-2 min après démarrage  
+**Port 5000 occupé:** Vérifier avec `Get-NetTCPConnection -LocalPort 5000`
+
+## 📖 Documentation
+
+- [KEYCLOAK_SETUP.md](BlazorGameQuest1234/KEYCLOAK_SETUP.md) - Configuration Keycloak complète
+- [DOCKER_DEPLOYMENT.md](BlazorGameQuest1234/DOCKER_DEPLOYMENT.md) - Déploiement Docker détaillé
+- [SWAGGER_AUTHENTICATION_GUIDE.md](BlazorGameQuest1234/SWAGGER_AUTHENTICATION_GUIDE.md) - Test API avec JWT
+
+## ✅ Conformité Projet
+
+- ✅ 2 joueurs (user1/user2) + 1 admin avec bons rôles
+- ✅ Gateway port 5000 HTTP uniquement
+- ✅ Authentification Keycloak + JWT
+- ✅ Lien base de données via KeycloakUserId
+- ✅ Tests unitaires + Couverture
+- ✅ Docker Compose fonctionnel
 
 ---
 
-**EFREI Paris - Cours .NET - Semestre 7**
+**Version 5.0** - Microservices + Keycloak + Docker + API Gateway

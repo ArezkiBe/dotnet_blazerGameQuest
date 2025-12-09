@@ -13,96 +13,38 @@ namespace DataAccess.Data;
 public static class DbInitializer
 {
     /// <summary>
-    /// Initialise la base de données avec des données de test
+    /// Initialise la base de données avec des données de test.
+    /// Appelé automatiquement au démarrage de l'application.
     /// </summary>
     /// <param name="context">Le contexte de base de données</param>
     public static async Task InitializeAsync(GameDbContext context)
     {
-        // S'assurer que la base de données existe et que les migrations sont appliquées
-        // Uniquement pour les bases de données relationnelles (pas InMemory)
+        // S'assurer que la base existe et que les migrations sont à jour
+        // Stratégie différente selon le type de base : PostgreSQL vs InMemory
         if (!context.Database.IsInMemory())
         {
+            // PostgreSQL : appliquer les migrations pendantes
             await context.Database.MigrateAsync();
         }
         else
         {
+            // InMemory (tests) : créer le schéma directement
             await context.Database.EnsureCreatedAsync();
         }
 
-        // Vérifier si des données existent déjà
+        // Pattern Idempotent : vérifier si déjà initialisé pour éviter les doublons
         if (await context.Users.AnyAsync())
         {
-            return; // La base de données contient déjà des données
+            return; // Déjà peuplé, ne rien faire
         }
 
-        // Créer des utilisateurs de test
-        var users = new[]
-        {
-            new User
-            {
-                Email = "admin@blazergamequest.com",
-                Username = "GameAdmin",
-                Role = UserRole.Administrator,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new User
-            {
-                Email = "player1@example.com",
-                Username = "Aventurier1",
-                Role = UserRole.Player,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new User
-            {
-                Email = "player2@example.com",
-                Username = "Exploratrice",
-                Role = UserRole.Player,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            }
-        };
+        // Stratégie d'authentification avec Keycloak :
+        // - Les utilisateurs sont gérés par Keycloak (pas de création en base locale)
+        // - Les profils Player sont créés automatiquement à la première connexion
+        // - Voir PlayersController.GetPlayerByUsername() pour la logique de création automatique
 
-        await context.Users.AddRangeAsync(users);
-        await context.SaveChangesAsync();
-
-        // Créer des joueurs
-        var players = new[]
-        {
-            new Player
-            {
-                UserId = users[1].Id,
-                Username = users[1].Username,
-                Score = 150,
-                CurrentRoom = 3,
-                CreatedAt = DateTime.UtcNow
-            },
-            new Player
-            {
-                UserId = users[2].Id,
-                Username = users[2].Username,
-                Score = 200,
-                CurrentRoom = 1,
-                CreatedAt = DateTime.UtcNow
-            }
-        };
-
-        await context.Players.AddRangeAsync(players);
-
-        // Créer un administrateur
-        var administrator = new Administrator
-        {
-            UserId = users[0].Id,
-            CanManageUsers = true,
-            CanManageGames = true,
-            CanViewAnalytics = true,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        await context.Administrators.AddAsync(administrator);
-
-        // Créer un donjon de test
+        // Créer un donjon de démonstration (difficulté moyenne : 2/5)
+        // En production, les donjons sont générés procéduralement par DungeonGeneratorService
         var dungeon = new Dungeon
         {
             Name = "Château des Ombres",
@@ -115,7 +57,8 @@ public static class DbInitializer
         await context.Dungeons.AddAsync(dungeon);
         await context.SaveChangesAsync();
 
-        // Créer les salles du donjon
+        // Créer 5 salles avec difficulté croissante (1 → 5)
+        // Pattern roguelike : la difficulté augmente progressivement
         var rooms = new[]
         {
             new Room

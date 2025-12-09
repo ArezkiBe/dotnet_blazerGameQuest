@@ -204,6 +204,10 @@ namespace DataAccess.Migrations
                     b.Property<int>("CurrentRoom")
                         .HasColumnType("integer");
 
+                    b.Property<string>("KeycloakUserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<int>("Score")
                         .HasColumnType("integer");
 

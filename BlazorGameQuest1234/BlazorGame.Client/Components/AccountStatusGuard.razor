@@ -1,0 +1,106 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using BlazorGame.Client.Services
+@using System.Timers
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IGameApiService GameApi
+@inject NavigationManager Navigation
+@implements IDisposable
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private bool _isCheckingStatus = true;
+    private bool _isAccountActive = true;
+    private System.Timers.Timer? _statusCheckTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Ne pas vérifier sur la page de compte désactivé ou login
+        var currentUrl = Navigation.Uri;
+        if (currentUrl.Contains("/account-disabled") || currentUrl.Contains("/login"))
+        {
+            _isCheckingStatus = false;
+            return;
+        }
+
+        // Première vérification au chargement
+        await CheckAccountStatus();
+        _isCheckingStatus = false;
+
+        // Vérifier le statut toutes les 2 secondes pour une réaction rapide
+        _statusCheckTimer = new System.Timers.Timer(2000);
+        _statusCheckTimer.Elapsed += async (sender, e) => await CheckAccountStatus();
+        _statusCheckTimer.AutoReset = true;
+        _statusCheckTimer.Start();
+
+        // S'abonner aux changements de navigation
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        // Ne pas vérifier sur certaines pages
+        if (e.Location.Contains("/account-disabled") || e.Location.Contains("/login"))
+        {
+            return;
+        }
+
+        await CheckAccountStatus();
+    }
+
+    private async Task CheckAccountStatus()
+    {
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                var username = user.FindFirst("preferred_username")?.Value;
+                
+                if (!string.IsNullOrEmpty(username))
+                {
+                    // Vérifier si l'utilisateur est actif
+                    var userInfo = await GameApi.GetUserByUsernameAsync(username);
+                    
+                    if (userInfo != null && !userInfo.IsActive)
+                    {
+                        _isAccountActive = false;
+                        _statusCheckTimer?.Stop();
+                        
+                        // Rediriger immédiatement vers la page de compte désactivé
+                        await InvokeAsync(() =>
+                        {
+                            Navigation.NavigateTo("/account-disabled", forceLoad: true);
+                        });
+                        return;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la vérification du statut: {ex.Message}");
+        }
+    }
+
+    public void Dispose()
+    {
+        _statusCheckTimer?.Stop();
+        _statusCheckTimer?.Dispose();
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+}
+
+@if (_isCheckingStatus)
+{
+    <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+        <p style="color: #ffd700; font-family: 'Courier New', monospace;">⏳ Vérification du compte...</p>
+    </div>
+}
+else if (_isAccountActive)
+{
+    @ChildContent
+}

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DataAccess.Data;
 using SharedModels.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GameAPI.Controllers;
 
@@ -11,6 +12,7 @@ namespace GameAPI.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Tags("Users")]
+[Authorize] // Utilisateurs authentifiés, vérification admin dans les méthodes
 public class UsersController : ControllerBase
 {
     private readonly GameDbContext _context;
@@ -23,16 +25,31 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Récupère tous les utilisateurs actifs
+    /// Vérifie si l'utilisateur actuel est admin
     /// </summary>
-    /// <returns>Liste des utilisateurs actifs</returns>
+    private bool IsCurrentUserAdmin()
+    {
+        var username = User.FindFirst("preferred_username")?.Value ?? "";
+        return username.ToLower() == "admin" || User.IsInRole("administrateur");
+    }
+
+    /// <summary>
+    /// Récupère tous les utilisateurs (actifs et inactifs)
+    /// </summary>
+    /// <returns>Liste de tous les utilisateurs</returns>
     /// <response code="200">Retourne la liste des utilisateurs</response>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<User>>> GetUsers()
     {
+        // Vérification admin manuelle car nécessaire pour PlayerManagement
+        if (!IsCurrentUserAdmin())
+        {
+            return Forbid();
+        }
+
+        // Retourner TOUS les utilisateurs (actifs et inactifs) pour la gestion
         var users = await _context.Users
-            .Where(u => u.IsActive)
             .OrderBy(u => u.Username)
             .ToListAsync();
         
@@ -56,13 +73,13 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Récupère un utilisateur par son nom d'utilisateur
+    /// Récupère un utilisateur par son nom d'utilisateur (actif ou inactif)
     /// </summary>
     [HttpGet("by-username/{username}")]
     public async Task<ActionResult<User>> GetUserByUsername(string username)
     {
         var user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Username == username && u.IsActive);
+            .FirstOrDefaultAsync(u => u.Username == username);
         
         return user == null ? NotFound() : Ok(user);
     }
@@ -75,6 +92,7 @@ public class UsersController : ControllerBase
     /// <response code="201">Utilisateur créé avec succès</response>
     /// <response code="409">Nom d'utilisateur ou email déjà utilisé</response>
     [HttpPost]
+    [Authorize(Roles = "administrateur")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<User>> CreateUser(User user)
@@ -99,6 +117,7 @@ public class UsersController : ControllerBase
     /// Met à jour un utilisateur existant
     /// </summary>
     [HttpPut("{id}")]
+    [Authorize(Roles = "administrateur")]
     public async Task<IActionResult> UpdateUser(int id, User user)
     {
         if (id != user.Id)
@@ -128,6 +147,7 @@ public class UsersController : ControllerBase
     /// Supprime un utilisateur (suppression logique)
     /// </summary>
     [HttpDelete("{id}")]
+    [Authorize(Roles = "administrateur")]
     public async Task<IActionResult> DeleteUser(int id)
     {
         var user = await _context.Users.FindAsync(id);
@@ -151,6 +171,104 @@ public class UsersController : ControllerBase
             ActiveUsers = await _context.Users.CountAsync(u => u.IsActive),
             Administrators = await _context.Users.CountAsync(u => u.Role == UserRole.Administrator),
             Players = await _context.Users.CountAsync(u => u.Role == UserRole.Player)
+        };
+
+        return Ok(stats);
+    }
+
+    /// <summary>
+    /// Active ou désactive un utilisateur (Admin uniquement)
+    /// </summary>
+    /// <param name="id">ID de l'utilisateur</param>
+    /// <param name="isActive">Nouveau statut d'activation</param>
+    /// <returns>Utilisateur mis à jour</returns>
+    [HttpPut("{id}/status")]
+    public async Task<IActionResult> UpdateUserStatus(int id, [FromBody] bool isActive)
+    {
+        // Vérification admin manuelle
+        if (!IsCurrentUserAdmin())
+        {
+            return Forbid();
+        }
+
+        var user = await _context.Users.FindAsync(id);
+        
+        if (user == null)
+        {
+            return NotFound(new { Message = "Utilisateur non trouvé" });
+        }
+
+        // Empêcher la désactivation du dernier administrateur
+        if (!isActive && user.Role == UserRole.Administrator)
+        {
+            var adminCount = await _context.Users.CountAsync(u => u.Role == UserRole.Administrator && u.IsActive);
+            if (adminCount <= 1)
+            {
+                return BadRequest(new { Message = "Impossible de désactiver le dernier administrateur" });
+            }
+        }
+
+        user.IsActive = isActive;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { Message = $"Utilisateur {(isActive ? "activé" : "désactivé")} avec succès", User = user });
+    }
+
+    /// <summary>
+    /// Récupère tous les utilisateurs incluant les inactifs (Admin uniquement)
+    /// </summary>
+    /// <returns>Liste de tous les utilisateurs</returns>
+    [HttpGet("all")]
+    public async Task<ActionResult<IEnumerable<User>>> GetAllUsers()
+    {
+        var users = await _context.Users
+            .OrderBy(u => u.Username)
+            .ToListAsync();
+        
+        return Ok(users);
+    }
+
+    /// <summary>
+    /// Récupère les statistiques détaillées pour le dashboard admin
+    /// </summary>
+    [HttpGet("dashboard-stats")]
+    [Authorize(Roles = "administrateur")]
+    public async Task<ActionResult<object>> GetDashboardStatistics()
+    {
+        var totalUsers = await _context.Users.CountAsync();
+        var activeUsers = await _context.Users.CountAsync(u => u.IsActive);
+        var totalPlayers = await _context.Players.CountAsync();
+        var totalSessions = await _context.GameSessions.CountAsync();
+        
+        var topPlayer = await _context.Players
+            .OrderByDescending(p => p.Score)
+            .FirstOrDefaultAsync();
+            
+        var averageScore = await _context.Players.AverageAsync(p => (double?)p.Score) ?? 0;
+        
+        var recentActivity = await _context.GameSessions
+            .OrderByDescending(gs => gs.StartedAt)
+            .Take(5)
+            .Include(gs => gs.Player)
+            .Select(gs => new {
+                PlayerName = gs.Player!.Username,
+                Score = gs.TotalScore,
+                Date = gs.StartedAt,
+                Duration = gs.CompletedAt.HasValue ? 
+                    (gs.CompletedAt.Value - gs.StartedAt).TotalMinutes : 0
+            })
+            .ToListAsync();
+
+        var stats = new
+        {
+            TotalUsers = totalUsers,
+            ActiveUsers = activeUsers,
+            TotalPlayers = totalPlayers,
+            TotalSessions = totalSessions,
+            TopPlayer = topPlayer?.Username ?? "Aucun",
+            TopScore = topPlayer?.Score ?? 0,
+            AverageScore = (int)averageScore,
+            RecentActivity = recentActivity
         };
 
         return Ok(stats);
